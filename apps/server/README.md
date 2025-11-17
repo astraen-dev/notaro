@@ -33,3 +33,7 @@ The server's primary responsibilities are:
    ```bash
    docker build -t notaro_server -f ./apps/server/Dockerfile .
    ```
+
+## License
+
+This application is licensed under the **Elastic License 2.0**. See the [LICENSE](LICENSE) file for the full text.

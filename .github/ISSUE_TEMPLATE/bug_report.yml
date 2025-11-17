@@ -1,0 +1,71 @@
+---
+name: 🐞 Bug Report
+description: Create a report to help us improve Notaro
+labels: ['bug', 'status: needs-triage']
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thank you for taking the time to fill out this bug report!
+
+  - type: dropdown
+    id: platform
+    attributes:
+      label: Which Notaro platform are you using?
+      description: On which platform did you encounter the bug?
+      multiple: true
+      options:
+        - Desktop (Windows)
+        - Desktop (macOS)
+        - Desktop (Linux)
+        - Mobile (Android)
+        - Mobile (iOS)
+        - Web
+        - Server
+    validations:
+      required: true
+
+  - type: textarea
+    id: description
+    attributes:
+      label: Describe the bug
+      description: A clear and concise description of what the bug is.
+    validations:
+      required: true
+
+  - type: textarea
+    id: reproduction
+    attributes:
+      label: Steps to Reproduce
+      description: Please provide detailed steps to reproduce the behavior.
+      placeholder: |
+        1. Go to '...'
+        2. Click on '....'
+        3. Scroll down to '....'
+        4. See error
+    validations:
+      required: true
+
+  - type: textarea
+    id: expected
+    attributes:
+      label: Expected Behavior
+      description: A clear and concise description of what you expected to happen.
+    validations:
+      required: true
+
+  - type: textarea
+    id: screenshots
+    attributes:
+      label: Screenshots
+      description: If applicable, add screenshots to help explain your problem.
+
+  - type: textarea
+    id: additional-context
+    attributes:
+      label: Additional Context
+      description: |
+        Add any other context about the problem here.
+        - Notaro Version: [e.g., 0.1.0]
+        - OS: [e.g., Windows 11, macOS Sonoma, Ubuntu 22.04]
+        - Browser (if web): [e.g., Chrome 125, Firefox 126]

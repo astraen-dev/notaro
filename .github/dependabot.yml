@@ -1,0 +1,104 @@
+---
+version: 2
+updates:
+  # --- RUST / CARGO Configuration ---
+  - package-ecosystem: 'cargo'
+    directory: '/'
+    schedule:
+      interval: 'weekly'
+    commit-message:
+      prefix: 'deps(rust)'
+      include: 'scope'
+    labels:
+      - 'dependencies'
+      - 'rust'
+    groups:
+      rust-dependencies:
+        update-types:
+          - 'minor'
+          - 'patch'
+
+  # --- NPM / PNPM Configurations ---
+  - package-ecosystem: 'npm'
+    directory: '/'
+    schedule:
+      interval: 'daily'
+    commit-message:
+      prefix: 'deps(pnpm)'
+      include: 'scope'
+    labels:
+      - 'dependencies'
+      - 'pnpm'
+    groups:
+      production-deps:
+        dependency-type: 'production'
+      development-deps:
+        dependency-type: 'development'
+
+  - package-ecosystem: 'npm'
+    directory: '/apps/desktop'
+    schedule:
+      interval: 'weekly'
+    commit-message:
+      prefix: 'deps(desktop)'
+      include: 'scope'
+    labels:
+      - 'dependencies'
+      - 'pnpm'
+      - 'desktop'
+    groups:
+      desktop-prod-deps:
+        dependency-type: 'production'
+      desktop-dev-deps:
+        dependency-type: 'development'
+
+  - package-ecosystem: 'npm'
+    directory: '/apps/web'
+    schedule:
+      interval: 'weekly'
+    commit-message:
+      prefix: 'deps(web)'
+      include: 'scope'
+    labels:
+      - 'dependencies'
+      - 'pnpm'
+      - 'web'
+    groups:
+      web-prod-deps:
+        dependency-type: 'production'
+      web-dev-deps:
+        dependency-type: 'development'
+
+  # --- DART / PUB Configuration ---
+  - package-ecosystem: 'pub'
+    directory: '/apps/mobile'
+    schedule:
+      interval: 'weekly'
+    commit-message:
+      prefix: 'deps(mobile)'
+      include: 'scope'
+    labels:
+      - 'dependencies'
+      - 'flutter'
+      - 'mobile'
+    groups:
+      mobile-prod-deps:
+        dependency-type: 'production'
+      mobile-dev-deps:
+        dependency-type: 'development'
+
+  # --- GITHUB ACTIONS Configuration ---
+  - package-ecosystem: 'github-actions'
+    directory: '/'
+    schedule:
+      interval: 'weekly'
+    commit-message:
+      prefix: 'ci'
+      include: 'scope'
+    labels:
+      - 'ci'
+      - 'github-actions'
+    groups:
+      github-actions:
+        patterns:
+          - '*'

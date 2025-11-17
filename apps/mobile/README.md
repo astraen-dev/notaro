@@ -28,3 +28,7 @@ re-implement it in Dart. Instead, it uses a Foreign Function Interface (FFI) bri
 4. **Build the App:**
    - **Android:** `flutter build apk` or `flutter build appbundle`
    - **iOS:** `flutter build ipa`
+
+## License
+
+This package is licensed under the MIT License. See the [LICENSE](../../LICENSE) file in the root of the repository for the full text.

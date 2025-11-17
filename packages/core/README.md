@@ -32,3 +32,7 @@ This library is designed to be consumed by all Notaro applications in different 
 
 - **Check the crate:** `cargo check -p notaro_core`
 - **Run tests:** `cargo test -p notaro_core`
+
+## License
+
+This package is licensed under the MIT License. See the [LICENSE](../../LICENSE) file in the root of the repository for the full text.

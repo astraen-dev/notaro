@@ -1,0 +1,29 @@
+# --------------------------------------------------------------------------- #
+# Default Owner: The core team owns everything by default.
+# This acts as a catch-all for any files not specified below.
+# --------------------------------------------------------------------------- #
+*                                       @astraen-dev/core
+
+# --------------------------------------------------------------------------- #
+# Focused Teams: Assign specific parts of the codebase to focused teams.
+# The last matching pattern takes precedence.
+# --------------------------------------------------------------------------- #
+
+# Rust Team: Owns the core library, sync server, and Tauri backend.
+/packages/core/                         @astraen-dev/core
+/apps/server/                           @astraen-dev/core
+/apps/desktop/src-tauri/                @astraen-dev/core
+/Cargo.toml                             @astraen-dev/core
+
+# Web Team: Owns the SvelteKit frontends for the Web and Desktop apps.
+/apps/web/                              @astraen-dev/core
+/apps/desktop/                          @astraen-dev/core
+# Un-assign the Tauri part from the web team so the Rust rule above applies.
+/apps/desktop/src-tauri/
+
+# Mobile Team: Owns the Flutter application.
+/apps/mobile/                           @astraen-dev/core
+
+# Docs Team: Owns all Markdown documentation files.
+# This rule is last so it overrides the default owner for READMEs etc.
+/**/*.md                                @astraen-dev/core

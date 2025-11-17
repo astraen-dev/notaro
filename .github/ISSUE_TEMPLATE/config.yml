@@ -1,0 +1,9 @@
+---
+blank_issues_enabled: false
+contact_links:
+  - name: ❓ Ask a Question
+    url: https://github.com/astraen-dev/notaro/discussions/new?category=q-a
+    about: Please ask and answer questions here.
+  - name: 💡 Feature Idea / Discussion
+    url: https://github.com/straen-dev/notaro/discussions/new?category=ideas
+    about: Please suggest and discuss new ideas here before creating a formal feature request.
