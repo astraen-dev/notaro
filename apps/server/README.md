@@ -33,4 +33,3 @@ The server's primary responsibilities are:
    ```bash
    docker build -t notaro_server -f ./apps/server/Dockerfile .
    ```
-   

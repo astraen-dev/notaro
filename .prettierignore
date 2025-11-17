@@ -1,0 +1,19 @@
+# PNPM
+**/pnpm-lock.yaml
+
+# Build outputs
+**/build/
+**/.svelte-kit/
+**/gen/
+**/target/
+/apps/mobile/.dart_tool/
+/apps/mobile/.idea/
+Cargo.lock
+
+# Caches
+.eslintcache
+.vite-cache
+
+# OS-specific
+.DS_Store
+Thumbs.db

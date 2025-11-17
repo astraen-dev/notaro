@@ -26,5 +26,5 @@ re-implement it in Dart. Instead, it uses a Foreign Function Interface (FFI) bri
    flutter run
    ```
 4. **Build the App:**
-    - **Android:** `flutter build apk` or `flutter build appbundle`
-    - **iOS:** `flutter build ipa`
+   - **Android:** `flutter build apk` or `flutter build appbundle`
+   - **iOS:** `flutter build ipa`

@@ -4,10 +4,7 @@ use notaro_core::core_entrypoint;
 #[tauri::command]
 fn greet(name: &str) -> String {
     let core_message = core_entrypoint();
-    format!(
-        "Hello, {}! You've been greeted from Rust! Core says: '{}'",
-        name, core_message
-    )
+    format!("Hello, {}! You've been greeted from Rust! Core says: '{}'", name, core_message)
 }
 
 #[cfg_attr(mobile, tauri::mobile_entry_point)]

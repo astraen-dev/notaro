@@ -1,0 +1,8 @@
+{
+  "name": "notaro_mobile",
+  "private": true,
+  "scripts": {
+    "lint": "flutter analyze",
+    "format": "dart format ."
+  }
+}

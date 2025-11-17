@@ -10,7 +10,6 @@ analyzer:
     - '**/*.freezed.dart'
     - 'lib/oss_licenses.dart'
 
-
 linter:
   rules:
     - always_declare_return_types
