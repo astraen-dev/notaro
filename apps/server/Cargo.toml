@@ -1,0 +1,9 @@
+[package]
+name = "notaro_server"
+version = "0.1.0"
+edition = "2024"
+authors = ["David Young <dev@astraen.dev>"]
+license = "Elastic-2.0"
+
+[dependencies]
+notaro_core = { path = "../../packages/core" }

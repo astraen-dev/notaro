@@ -1,0 +1,12 @@
+[package]
+name = "notaro_core"
+version = "0.1.0"
+edition = "2024"
+authors = ["David Young <dev@astraen.dev>"]
+license = "MIT"
+
+[lib]
+name = "notaro_core"
+path = "src/lib.rs"
+
+[dependencies]

@@ -1,0 +1,101 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<module type="EMPTY_MODULE" version="4">
+  <component name="FacetManager">
+    <facet type="Python" name="Python facet">
+      <configuration sdkName="Python 3.12 (notaro)" />
+    </facet>
+  </component>
+  <component name="NewModuleRootManager">
+    <content url="file://$MODULE_DIR$">
+      <sourceFolder url="file://$MODULE_DIR$/apps/desktop/src-tauri/src" isTestSource="false" />
+      <sourceFolder url="file://$MODULE_DIR$/apps/server/src" isTestSource="false" />
+      <sourceFolder url="file://$MODULE_DIR$/packages/core/src" isTestSource="false" />
+      <excludeFolder url="file://$MODULE_DIR$/.idea/libraries" />
+      <excludeFolder url="file://$MODULE_DIR$/apps/desktop/.svelte-kit" />
+      <excludeFolder url="file://$MODULE_DIR$/apps/desktop/src-tauri/gen/schemas" />
+      <excludeFolder url="file://$MODULE_DIR$/apps/mobile/.dart_tool" />
+      <excludeFolder url="file://$MODULE_DIR$/apps/mobile/.idea" />
+      <excludeFolder url="file://$MODULE_DIR$/apps/mobile/.pub" />
+      <excludeFolder url="file://$MODULE_DIR$/apps/mobile/build" />
+      <excludeFolder url="file://$MODULE_DIR$/apps/mobile/ios/Flutter/ephemeral" />
+      <excludeFolder url="file://$MODULE_DIR$/apps/mobile/macos/Flutter/ephemeral" />
+      <excludeFolder url="file://$MODULE_DIR$/apps/server/target" />
+      <excludeFolder url="file://$MODULE_DIR$/apps/web/.svelte-kit" />
+      <excludeFolder url="file://$MODULE_DIR$/design_docs" />
+      <excludeFolder url="file://$MODULE_DIR$/packages/core/target" />
+      <excludeFolder url="file://$MODULE_DIR$/target" />
+      <excludeFolder url="file://$MODULE_DIR$/target/debug/build/anyhow-3c5cabb2ffae8d80/out" />
+      <excludeFolder url="file://$MODULE_DIR$/target/debug/build/async-io-26c7e2f055b2bb12/out" />
+      <excludeFolder url="file://$MODULE_DIR$/target/debug/build/atk-sys-f38c8e15b04beff0/out" />
+      <excludeFolder url="file://$MODULE_DIR$/target/debug/build/cairo-sys-rs-07561149a5e221b4/out" />
+      <excludeFolder url="file://$MODULE_DIR$/target/debug/build/camino-01e60b11034e6249/out" />
+      <excludeFolder url="file://$MODULE_DIR$/target/debug/build/cookie-154042fe525ee29e/out" />
+      <excludeFolder url="file://$MODULE_DIR$/target/debug/build/crc32fast-25189307e24d4ed2/out" />
+      <excludeFolder url="file://$MODULE_DIR$/target/debug/build/crossbeam-utils-d00078864a3cf6b2/out" />
+      <excludeFolder url="file://$MODULE_DIR$/target/debug/build/cssparser-aabda3904614bc58/out" />
+      <excludeFolder url="file://$MODULE_DIR$/target/debug/build/erased-serde-15986ae9098a2df1/out" />
+      <excludeFolder url="file://$MODULE_DIR$/target/debug/build/field-offset-caf55a6081244da8/out" />
+      <excludeFolder url="file://$MODULE_DIR$/target/debug/build/gdk-pixbuf-sys-a384ffd1149bcc93/out" />
+      <excludeFolder url="file://$MODULE_DIR$/target/debug/build/gdk-sys-86dacee7f7845ecc/out" />
+      <excludeFolder url="file://$MODULE_DIR$/target/debug/build/gdkx11-sys-3da7b1e01c477f76/out" />
+      <excludeFolder url="file://$MODULE_DIR$/target/debug/build/generic-array-ae3b47795c192771/out" />
+      <excludeFolder url="file://$MODULE_DIR$/target/debug/build/getrandom-d1bf2ab98dca2ac4/out" />
+      <excludeFolder url="file://$MODULE_DIR$/target/debug/build/getrandom-d6ac72233c4ee7a9/out" />
+      <excludeFolder url="file://$MODULE_DIR$/target/debug/build/gio-e123186b131c4d47/out" />
+      <excludeFolder url="file://$MODULE_DIR$/target/debug/build/gio-sys-d00c99da79ec6201/out" />
+      <excludeFolder url="file://$MODULE_DIR$/target/debug/build/glib-sys-dddc6539c6a4b63f/out" />
+      <excludeFolder url="file://$MODULE_DIR$/target/debug/build/gobject-sys-e9e6a376a2a2d2ae/out" />
+      <excludeFolder url="file://$MODULE_DIR$/target/debug/build/gtk-a5459cb5de29d4c2/out" />
+      <excludeFolder url="file://$MODULE_DIR$/target/debug/build/gtk-sys-61858ffe024b9ff9/out" />
+      <excludeFolder url="file://$MODULE_DIR$/target/debug/build/icu_normalizer_data-fcbfba6e4e10b088/out" />
+      <excludeFolder url="file://$MODULE_DIR$/target/debug/build/icu_properties_data-03858bfbcb53c063/out" />
+      <excludeFolder url="file://$MODULE_DIR$/target/debug/build/indexmap-6862b0348aea1d24/out" />
+      <excludeFolder url="file://$MODULE_DIR$/target/debug/build/javascriptcore-rs-sys-1e2022613b6bfea8/out" />
+      <excludeFolder url="file://$MODULE_DIR$/target/debug/build/libc-22036a069ddc6709/out" />
+      <excludeFolder url="file://$MODULE_DIR$/target/debug/build/libc-e9115fddd12f0637/out" />
+      <excludeFolder url="file://$MODULE_DIR$/target/debug/build/markup5ever-502ab03796426055/out" />
+      <excludeFolder url="file://$MODULE_DIR$/target/debug/build/memoffset-13a0e78c1db97baf/out" />
+      <excludeFolder url="file://$MODULE_DIR$/target/debug/build/nix-7e9956e0e97090e7/out" />
+      <excludeFolder url="file://$MODULE_DIR$/target/debug/build/notaro-2d6578b0bc31ee7e/out" />
+      <excludeFolder url="file://$MODULE_DIR$/target/debug/build/pango-sys-14e74f4cecfb87ec/out" />
+      <excludeFolder url="file://$MODULE_DIR$/target/debug/build/parking_lot_core-764a24a18c3c27c7/out" />
+      <excludeFolder url="file://$MODULE_DIR$/target/debug/build/proc-macro-error-83a50d4a17028564/out" />
+      <excludeFolder url="file://$MODULE_DIR$/target/debug/build/proc-macro-error-attr-3cc7ff347374ddc0/out" />
+      <excludeFolder url="file://$MODULE_DIR$/target/debug/build/proc-macro-hack-49e89d39f99ae281/out" />
+      <excludeFolder url="file://$MODULE_DIR$/target/debug/build/proc-macro2-2a41dafa8900b396/out" />
+      <excludeFolder url="file://$MODULE_DIR$/target/debug/build/proc-macro2-c333a9e7389aea9a/out" />
+      <excludeFolder url="file://$MODULE_DIR$/target/debug/build/quote-cd96aafde9ace217/out" />
+      <excludeFolder url="file://$MODULE_DIR$/target/debug/build/rustix-deaae35be18e6be0/out" />
+      <excludeFolder url="file://$MODULE_DIR$/target/debug/build/schemars-4d063704128f356b/out" />
+      <excludeFolder url="file://$MODULE_DIR$/target/debug/build/selectors-9a249715a436b342/out" />
+      <excludeFolder url="file://$MODULE_DIR$/target/debug/build/serde-74769cbde2087678/out" />
+      <excludeFolder url="file://$MODULE_DIR$/target/debug/build/serde-e8fdab148a6f006c/out" />
+      <excludeFolder url="file://$MODULE_DIR$/target/debug/build/serde_core-52ff2a8d611a4fb4/out" />
+      <excludeFolder url="file://$MODULE_DIR$/target/debug/build/serde_core-b6aa84121aef9aa1/out" />
+      <excludeFolder url="file://$MODULE_DIR$/target/debug/build/serde_json-713a722cbf4801c6/out" />
+      <excludeFolder url="file://$MODULE_DIR$/target/debug/build/serde_json-8a2aa5211cc5e031/out" />
+      <excludeFolder url="file://$MODULE_DIR$/target/debug/build/soup3-sys-9ef7ff5d1e3a7177/out" />
+      <excludeFolder url="file://$MODULE_DIR$/target/debug/build/syn-4301cb960f5f0691/out" />
+      <excludeFolder url="file://$MODULE_DIR$/target/debug/build/target-lexicon-3d70bb50632753cc/out" />
+      <excludeFolder url="file://$MODULE_DIR$/target/debug/build/tauri-8e0c358273d0caf8/out" />
+      <excludeFolder url="file://$MODULE_DIR$/target/debug/build/tauri-plugin-opener-e35574c3129e7ce2/out" />
+      <excludeFolder url="file://$MODULE_DIR$/target/debug/build/tauri-runtime-696c86483c34e642/out" />
+      <excludeFolder url="file://$MODULE_DIR$/target/debug/build/tauri-runtime-wry-bfa1e3890f1bd030/out" />
+      <excludeFolder url="file://$MODULE_DIR$/target/debug/build/thiserror-6c620b6a9df3a267/out" />
+      <excludeFolder url="file://$MODULE_DIR$/target/debug/build/thiserror-890c87310a772de7/out" />
+      <excludeFolder url="file://$MODULE_DIR$/target/debug/build/typeid-bf9504d2e89f6c13/out" />
+      <excludeFolder url="file://$MODULE_DIR$/target/debug/build/typenum-9f1831776c061cf0/out" />
+      <excludeFolder url="file://$MODULE_DIR$/target/debug/build/webkit2gtk-sys-54e2c3517b958672/out" />
+      <excludeFolder url="file://$MODULE_DIR$/target/debug/build/wry-2c8bb3f0f22ab6d5/out" />
+      <excludeFolder url="file://$MODULE_DIR$/target/debug/build/x11-6eab3ce2665ccf70/out" />
+      <excludeFolder url="file://$MODULE_DIR$/target/debug/build/x11-dl-fdc22b5ca75c0792/out" />
+      <excludeFolder url="file://$MODULE_DIR$/target/debug/build/zerocopy-5ab2750952a87681/out" />
+      <excludeFolder url="file://$MODULE_DIR$/venv" />
+    </content>
+    <orderEntry type="inheritedJdk" />
+    <orderEntry type="sourceFolder" forTests="false" />
+    <orderEntry type="library" name="Dart SDK" level="project" />
+    <orderEntry type="library" name="Dart Packages" level="project" />
+    <orderEntry type="library" name="Python 3.12 (notaro) interpreter library" level="application" />
+  </component>
+</module>
