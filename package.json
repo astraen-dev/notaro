@@ -27,9 +27,13 @@
   },
   "lint-staged": {
     "*.{md,json,yml,yaml}": "prettier --write",
-    "apps/{desktop,web}/**/*.{js,ts,svelte}": [
+    "apps/desktop/**/*.{js,ts,svelte}": [
       "prettier --write",
-      "eslint --fix"
+      "pnpm --filter notaro-desktop exec eslint --fix"
+    ],
+    "apps/web/**/*.{js,ts,svelte}": [
+      "prettier --write",
+      "pnpm --filter notaro-web exec eslint --fix"
     ],
     "{packages,apps}/**/*.rs": [
       "sh -c 'cargo fmt --all'",
