@@ -2046,7 +2046,11 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "72ef4a56884ca558e5ddb05a1d1e7e1bfd9a68d9ed024c21704cc98872dae1bb"
 
 [[package]]
-name = "notaro"
+name = "notaro_core"
+version = "0.1.0"
+
+[[package]]
+name = "notaro_desktop"
 version = "0.1.0"
 dependencies = [
  "notaro_core",
@@ -2056,10 +2060,6 @@ dependencies = [
  "tauri-build",
  "tauri-plugin-opener",
 ]
-
-[[package]]
-name = "notaro_core"
-version = "0.1.0"
 
 [[package]]
 name = "notaro_server"

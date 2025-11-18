@@ -2,5 +2,5 @@
 #![cfg_attr(not(debug_assertions), windows_subsystem = "windows")]
 
 fn main() {
-    notaro_lib::run()
+    notaro_desktop_lib::run()
 }

@@ -3,11 +3,11 @@
   "private": true,
   "scripts": {
     "prepare": "husky",
-    "dev:desktop": "pnpm --filter notaro dev",
+    "dev:desktop": "pnpm --filter notaro-desktop dev",
     "dev:web": "pnpm --filter notaro-web dev",
-    "build:desktop": "pnpm --filter notaro build",
+    "build:desktop": "pnpm --filter notaro-desktop build",
     "build:web": "pnpm --filter notaro-web build",
-    "tauri": "pnpm --filter notaro exec tauri",
+    "tauri": "pnpm --filter notaro-desktop exec tauri",
     "format": "pnpm format:js && pnpm format:rust && pnpm format:dart",
     "format:js": "prettier --write .",
     "format:rust": "cargo fmt --all",
@@ -32,12 +32,12 @@
       "eslint --fix"
     ],
     "{packages,apps}/**/*.rs": [
-      "cargo fmt --",
-      "cargo clippy --workspace --fix --allow-dirty --allow-staged -- -D warnings"
+      "sh -c 'cargo fmt --all'",
+      "sh -c 'cargo clippy --workspace --fix --allow-dirty --allow-staged -- -D warnings'"
     ],
     "apps/mobile/**/*.dart": [
-      "dart format",
-      "flutter analyze"
+      "sh -c 'dart format .'",
+      "sh -c 'flutter analyze'"
     ]
   }
 }
