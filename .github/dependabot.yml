@@ -7,7 +7,7 @@ updates:
     schedule:
       interval: 'weekly'
     commit-message:
-      prefix: 'deps(rust)'
+      prefix: 'deps'
       include: 'scope'
     labels:
       - 'dependencies'
@@ -24,7 +24,7 @@ updates:
     schedule:
       interval: 'daily'
     commit-message:
-      prefix: 'deps(pnpm)'
+      prefix: 'deps'
       include: 'scope'
     labels:
       - 'dependencies'
@@ -40,7 +40,7 @@ updates:
     schedule:
       interval: 'weekly'
     commit-message:
-      prefix: 'deps(desktop)'
+      prefix: 'deps'
       include: 'scope'
     labels:
       - 'dependencies'
@@ -57,7 +57,7 @@ updates:
     schedule:
       interval: 'weekly'
     commit-message:
-      prefix: 'deps(web)'
+      prefix: 'deps'
       include: 'scope'
     labels:
       - 'dependencies'
@@ -75,7 +75,7 @@ updates:
     schedule:
       interval: 'weekly'
     commit-message:
-      prefix: 'deps(mobile)'
+      prefix: 'deps'
       include: 'scope'
     labels:
       - 'dependencies'
