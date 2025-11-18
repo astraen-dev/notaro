@@ -10,6 +10,7 @@
       <sourceFolder url="file://$MODULE_DIR$/apps/desktop/src-tauri/src" isTestSource="false" />
       <sourceFolder url="file://$MODULE_DIR$/apps/server/src" isTestSource="false" />
       <sourceFolder url="file://$MODULE_DIR$/packages/core/src" isTestSource="false" />
+      <sourceFolder url="file://$MODULE_DIR$/packages/core/tests" isTestSource="true" />
       <excludeFolder url="file://$MODULE_DIR$/.idea/libraries" />
       <excludeFolder url="file://$MODULE_DIR$/apps/desktop/.svelte-kit" />
       <excludeFolder url="file://$MODULE_DIR$/apps/desktop/src-tauri/gen/schemas" />
