@@ -1,5 +1,5 @@
 use crate::error::Result;
-use crate::models::Note;
+use crate::models::{Note, UserSettings};
 use chrono::{DateTime, Utc};
 use rusqlite::{Connection, OptionalExtension, params};
 use std::path::Path;
@@ -29,6 +29,17 @@ impl DatabaseConnection {
                 updated_at TEXT NOT NULL,
                 version INTEGER NOT NULL,
                 is_deleted BOOLEAN NOT NULL DEFAULT 0
+            )",
+            [],
+        )?;
+
+        self.conn.execute(
+            "CREATE TABLE IF NOT EXISTS settings (
+                id INTEGER PRIMARY KEY CHECK (id = 1),
+                theme_mode TEXT NOT NULL,
+                accent_hue INTEGER NOT NULL,
+                font_family TEXT NOT NULL,
+                font_size INTEGER NOT NULL
             )",
             [],
         )?;
@@ -135,6 +146,47 @@ impl DatabaseConnection {
             })
         })
         .map_err(Into::into)
+    }
+
+    pub fn get_settings(&self) -> Result<UserSettings> {
+        let mut stmt = self.conn.prepare(
+            "SELECT theme_mode, accent_hue, font_family, font_size FROM settings WHERE id = 1",
+        )?;
+
+        let settings_iter = stmt.query_map([], |row| {
+            Ok(UserSettings {
+                theme_mode: row.get(0)?,
+                accent_hue: row.get(1)?,
+                font_family: row.get(2)?,
+                font_size: row.get(3)?,
+            })
+        });
+
+        // If table is empty or query fails, return default
+        if let Ok(mut rows) = settings_iter
+            && let Some(Ok(settings)) = rows.next()
+        {
+            return Ok(settings);
+        }
+
+        // Initialize default if missing
+        let default = UserSettings::default();
+        self.update_settings(&default)?;
+        Ok(default)
+    }
+
+    pub fn update_settings(&self, settings: &UserSettings) -> Result<()> {
+        self.conn.execute(
+            "INSERT OR REPLACE INTO settings (id, theme_mode, accent_hue, font_family, font_size)
+             VALUES (1, ?1, ?2, ?3, ?4)",
+            params![
+                settings.theme_mode,
+                settings.accent_hue,
+                settings.font_family,
+                settings.font_size
+            ],
+        )?;
+        Ok(())
     }
 
     // --- Sync Logic ---
@@ -332,5 +384,29 @@ mod tests {
 
         let current = db.get_note_by_id(&remote_note.id).unwrap();
         assert_eq!(current.title, "New Remote");
+    }
+
+    #[test]
+    fn test_settings_persistence() {
+        let db = get_mem_db();
+
+        // Should get defaults initially
+        let initial = db.get_settings().unwrap();
+        assert_eq!(initial.accent_hue, 250);
+
+        // Update settings
+        let new_settings = UserSettings {
+            theme_mode: "dark".to_string(),
+            accent_hue: 120,
+            font_family: "mono".to_string(),
+            font_size: 18,
+        };
+        db.update_settings(&new_settings).unwrap();
+
+        // Fetch again
+        let fetched = db.get_settings().unwrap();
+        assert_eq!(fetched.theme_mode, "dark");
+        assert_eq!(fetched.accent_hue, 120);
+        assert_eq!(fetched.font_family, "mono");
     }
 }

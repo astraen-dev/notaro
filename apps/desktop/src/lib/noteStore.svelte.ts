@@ -37,11 +37,10 @@ class NoteStore {
     this.notes.find((n) => n.id === this.selectedId) || null
   );
 
-  constructor() {
-    this.load();
-  }
+  // Remove constructor logic
+  constructor() {}
 
-  async load() {
+  async init() {
     try {
       this.notes = await invoke('get_notes');
     } catch (e) {
@@ -100,7 +99,7 @@ class NoteStore {
     } catch (e) {
       console.error('Failed to save note:', e);
       this.syncState = 'error';
-      await this.load(); // Revert
+      await this.init(); // Revert on error
     }
   }
 

@@ -30,6 +30,29 @@ impl Note {
     }
 }
 
+#[derive(Debug, Serialize, Deserialize, Clone, PartialEq)]
+pub struct UserSettings {
+    /// "system", "light", or "dark"
+    pub theme_mode: String,
+    /// 0 to 360
+    pub accent_hue: u16,
+    /// "sans", "serif", "mono"
+    pub font_family: String,
+    /// Base font size in px (e.g., 14, 16, 18)
+    pub font_size: u8,
+}
+
+impl Default for UserSettings {
+    fn default() -> Self {
+        Self {
+            theme_mode: "system".to_string(),
+            accent_hue: 250, // Default Indigo/Purple
+            font_family: "sans".to_string(),
+            font_size: 14,
+        }
+    }
+}
+
 /// Message structure for WebSocket communication
 #[derive(Debug, Serialize, Deserialize, PartialEq)]
 #[serde(tag = "type", content = "payload")]

@@ -1,4 +1,4 @@
-use notaro_core::{DatabaseConnection, Note};
+use notaro_core::{DatabaseConnection, Note, UserSettings};
 use std::sync::Mutex;
 use tauri::{Manager, State};
 
@@ -37,6 +37,18 @@ fn delete_note(state: State<AppState>, id: String) -> Result<(), String> {
     db.delete_note(&id).map_err(|e| e.to_string())
 }
 
+#[tauri::command]
+fn get_settings(state: State<AppState>) -> Result<UserSettings, String> {
+    let db = state.db.lock().map_err(|_| "Failed to lock mutex")?;
+    db.get_settings().map_err(|e| e.to_string())
+}
+
+#[tauri::command]
+fn save_settings(state: State<AppState>, settings: UserSettings) -> Result<(), String> {
+    let db = state.db.lock().map_err(|_| "Failed to lock mutex")?;
+    db.update_settings(&settings).map_err(|e| e.to_string())
+}
+
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
     tauri::Builder::default()
@@ -59,7 +71,14 @@ pub fn run() {
             app.manage(AppState { db: Mutex::new(db) });
             Ok(())
         })
-        .invoke_handler(tauri::generate_handler![get_notes, create_note, update_note, delete_note])
+        .invoke_handler(tauri::generate_handler![
+            get_notes,
+            create_note,
+            update_note,
+            delete_note,
+            get_settings,
+            save_settings
+        ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");
 }

@@ -1,6 +1,9 @@
 <script lang="ts">
   import { noteStore } from '$lib/noteStore.svelte';
+  import { settingsStore } from '$lib/settingsStore.svelte';
+  import SettingsModal from '../components/SettingsModal.svelte';
   import { fade } from 'svelte/transition';
+  import { onMount } from 'svelte';
   import {
     Plus,
     Trash2,
@@ -10,10 +13,48 @@
     CheckCircle2,
     Cloud,
     Loader2,
+    Settings,
   } from '@lucide/svelte';
   import '../app.css';
 
   let timer: ReturnType<typeof setTimeout>;
+
+  // Initialize stores on mount (ensures Tauri/DOM are ready)
+  onMount(() => {
+    void noteStore.init();
+    void settingsStore.init();
+  });
+
+  // Reactive Effect: Apply Settings to DOM
+  // This must be in a component (not the global store class) to link to the lifecycle
+  $effect(() => {
+    const root = document.documentElement;
+    const s = settingsStore.settings;
+
+    // 1. Apply Font
+    const fonts = {
+      sans: '"Inter", sans-serif',
+      serif: '"Merriweather", serif',
+      mono: '"JetBrains Mono", monospace',
+    };
+    root.style.setProperty('--font-main', fonts[s.font_family]);
+    root.style.setProperty('--font-size-base', `${s.font_size}px`);
+
+    // 2. Apply Accent Hue (HSL)
+    root.style.setProperty('--accent-hue', s.accent_hue.toString());
+
+    // 3. Apply Theme
+    const isDark =
+      s.theme_mode === 'dark' ||
+      (s.theme_mode === 'system' &&
+        window.matchMedia('(prefers-color-scheme: dark)').matches);
+
+    if (isDark) {
+      root.classList.add('dark');
+    } else {
+      root.classList.remove('dark');
+    }
+  });
 
   // Date formatter for the list
   const formatDate = (iso: string) => {
@@ -42,6 +83,8 @@
   }
 </script>
 
+<SettingsModal />
+
 <main
   class="flex h-screen w-screen gap-3 overflow-hidden p-3 text-slate-700 selection:bg-indigo-100 selection:text-indigo-900"
 >
@@ -58,13 +101,24 @@
         <Cloud size={18} strokeWidth={2.5} />
         <span class="text-lg font-bold tracking-tight">Notaro</span>
       </div>
-      <button
-        onclick={() => noteStore.add()}
-        class="rounded-lg border border-white/40 bg-white/50 p-1.5 text-indigo-600 shadow-sm transition-all hover:bg-white/80 hover:text-indigo-700 active:scale-95"
-        title="New Note"
-      >
-        <Plus size={20} />
-      </button>
+
+      <div class="flex items-center gap-1">
+        <button
+          onclick={() => settingsStore.toggle()}
+          class="rounded-lg border border-transparent p-1.5 text-slate-500 transition-all hover:bg-white/50 hover:text-slate-700 active:scale-95 dark:text-slate-400 dark:hover:text-slate-200"
+          title="Settings"
+        >
+          <Settings size={18} />
+        </button>
+
+        <button
+          onclick={() => noteStore.add()}
+          class="rounded-lg border border-white/40 bg-white/50 p-1.5 text-indigo-600 shadow-sm transition-all hover:bg-white/80 hover:text-indigo-700 active:scale-95"
+          title="New Note"
+        >
+          <Plus size={20} />
+        </button>
+      </div>
     </div>
 
     <!-- Search Bar -->
@@ -93,7 +147,7 @@
             ? 'border-white/60 bg-white/80 shadow-sm'
             : 'hover:border-white/20 hover:bg-white/30'}"
         >
-          <div class="mb-1 flex items-start justify-between">
+          <span class="mb-1 flex w-full items-start justify-between">
             <span
               class="truncate pr-2 font-semibold {noteStore.selectedId ===
               note.id
@@ -107,11 +161,11 @@
             >
               {formatDate(note.updated_at)}
             </span>
-          </div>
+          </span>
 
-          <p class="h-4 truncate text-xs opacity-60">
+          <span class="block h-4 truncate text-xs opacity-60">
             {note.content || 'No additional text'}
-          </p>
+          </span>
         </button>
       {/each}
 
@@ -182,12 +236,11 @@
 
         <!-- Content -->
         <textarea
-          value={noteStore.selectedNote.content}
           oninput={(e) => handleInput(e, 'content')}
           class="custom-scrollbar w-full flex-1 resize-none bg-transparent px-8 py-2 text-lg leading-relaxed text-slate-600 outline-none placeholder:text-slate-300"
           placeholder="Start typing your thoughts..."
-          spellcheck="false"
-        ></textarea>
+          spellcheck="false">{noteStore.selectedNote.content}</textarea
+        >
       </div>
     {:else}
       <!-- Empty State -->
