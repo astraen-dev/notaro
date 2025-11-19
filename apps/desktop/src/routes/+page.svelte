@@ -1,9 +1,28 @@
 <script lang="ts">
   import { noteStore } from '$lib/noteStore.svelte';
+  import { fade } from 'svelte/transition';
+  import {
+    Plus,
+    Trash2,
+    Search,
+    FileText,
+    PenLine,
+    CheckCircle2,
+    Cloud,
+    Loader2,
+  } from '@lucide/svelte';
   import '../app.css';
 
-  // Debounce logic for auto-saving
   let timer: ReturnType<typeof setTimeout>;
+
+  // Date formatter for the list
+  const formatDate = (iso: string) => {
+    const date = new Date(iso);
+    return new Intl.DateTimeFormat('en-US', {
+      month: 'short',
+      day: 'numeric',
+    }).format(date);
+  };
 
   function handleInput(e: Event, field: 'title' | 'content') {
     if (!noteStore.selectedNote) return;
@@ -12,119 +31,175 @@
     const title = field === 'title' ? val : noteStore.selectedNote.title;
     const content = field === 'content' ? val : noteStore.selectedNote.content;
 
-    // Optimistic UI update logic is already in the store's save method,
-    // but for typing speed we just trigger the save after a pause.
+    // Immediate update happens in store via optimistic UI
+    // We just debounce the actual invoke call
     clearTimeout(timer);
     timer = setTimeout(() => {
       if (noteStore.selectedNote) {
         noteStore.save(noteStore.selectedNote.id, title, content);
       }
-    }, 500);
-  }
-
-  function handleDelete() {
-    if (noteStore.selectedNote) {
-      noteStore.delete(noteStore.selectedNote.id);
-    }
+    }, 400);
   }
 </script>
 
-<main class="flex h-screen w-screen gap-4 p-4 font-sans">
-  <!-- SIDEBAR -->
+<main
+  class="flex h-screen w-screen gap-3 overflow-hidden p-3 text-slate-700 selection:bg-indigo-100 selection:text-indigo-900"
+>
+  <!-- GLASS SIDEBAR -->
   <aside
-    class="flex w-64 flex-col overflow-hidden rounded-2xl border border-white/30 bg-white/40 shadow-xl backdrop-blur-md transition-all"
+    class="flex w-72 flex-col overflow-hidden rounded-2xl border border-white/50 bg-white/40 shadow-xl backdrop-blur-xl transition-all"
   >
-    <div class="flex items-center justify-between border-b border-white/20 p-4">
-      <h1 class="font-bold text-gray-700">Notaro</h1>
+    <!-- Sidebar Header (Draggable) -->
+    <div
+      data-tauri-drag-region
+      class="flex items-center justify-between p-4 pb-2 select-none"
+    >
+      <div class="flex items-center gap-2 text-indigo-900/80">
+        <Cloud size={18} strokeWidth={2.5} />
+        <span class="text-lg font-bold tracking-tight">Notaro</span>
+      </div>
       <button
         onclick={() => noteStore.add()}
-        class="rounded-lg bg-blue-500/90 p-1 px-3 text-sm text-white shadow-md transition-colors hover:bg-blue-600"
+        class="rounded-lg border border-white/40 bg-white/50 p-1.5 text-indigo-600 shadow-sm transition-all hover:bg-white/80 hover:text-indigo-700 active:scale-95"
+        title="New Note"
       >
-        + New
+        <Plus size={20} />
       </button>
     </div>
 
-    <div class="flex-1 space-y-1 overflow-y-auto p-2">
-      {#each noteStore.notes as note (note.id)}
+    <!-- Search Bar -->
+    <div class="px-4 py-2">
+      <div class="group relative">
+        <Search
+          class="absolute top-1/2 left-3 -translate-y-1/2 text-slate-400 transition-colors group-focus-within:text-indigo-500"
+          size={16}
+        />
+        <input
+          type="text"
+          bind:value={noteStore.searchQuery}
+          placeholder="Search notes..."
+          class="w-full rounded-xl border border-transparent bg-slate-50/50 py-2 pr-3 pl-9 text-sm transition-all outline-none placeholder:text-slate-400 focus:border-indigo-200/50 focus:bg-white/70"
+        />
+      </div>
+    </div>
+
+    <!-- Note List -->
+    <div class="custom-scrollbar flex-1 space-y-1 overflow-y-auto p-2">
+      {#each noteStore.filteredNotes as note (note.id)}
         <button
           onclick={() => noteStore.select(note.id)}
-          class="w-full rounded-xl border border-transparent p-3 text-left transition-all duration-200
+          class="group relative w-full overflow-hidden rounded-xl border border-transparent p-3 text-left transition-all duration-200
           {noteStore.selectedId === note.id
-            ? 'border-white/40 bg-white/60 text-blue-900 shadow-sm'
-            : 'text-gray-600 hover:bg-white/30'}"
+            ? 'border-white/60 bg-white/80 shadow-sm'
+            : 'hover:border-white/20 hover:bg-white/30'}"
         >
-          <div class="truncate font-medium">{note.title || 'Untitled'}</div>
-          <div class="truncate text-xs text-gray-400">
-            {new Date(note.updated_at).toLocaleDateString()}
+          <div class="mb-1 flex items-start justify-between">
+            <span
+              class="truncate pr-2 font-semibold {noteStore.selectedId ===
+              note.id
+                ? 'text-slate-800'
+                : 'text-slate-600'}"
+            >
+              {note.title || 'Untitled Note'}
+            </span>
+            <span
+              class="mt-1 text-[10px] font-medium whitespace-nowrap opacity-50"
+            >
+              {formatDate(note.updated_at)}
+            </span>
           </div>
+
+          <p class="h-4 truncate text-xs opacity-60">
+            {note.content || 'No additional text'}
+          </p>
         </button>
       {/each}
 
-      {#if noteStore.notes.length === 0}
-        <div class="mt-10 text-center text-sm text-gray-400">No notes yet.</div>
+      {#if noteStore.filteredNotes.length === 0}
+        <div
+          class="flex h-40 flex-col items-center justify-center space-y-2 text-slate-400"
+          in:fade
+        >
+          <FileText size={32} class="opacity-20" />
+          <span class="text-sm">No notes found</span>
+        </div>
       {/if}
     </div>
   </aside>
 
-  <!-- EDITOR -->
+  <!-- MAIN EDITOR -->
   <section
-    class="relative flex flex-1 flex-col overflow-hidden rounded-2xl border border-white/40 bg-white/60 shadow-2xl backdrop-blur-xl"
+    class="relative flex flex-1 flex-col overflow-hidden rounded-2xl border border-white/60 bg-white/60 shadow-2xl backdrop-blur-2xl"
   >
     {#if noteStore.selectedNote}
-      <div class="flex h-full flex-col">
-        <!-- Toolbar -->
-        <div
-          class="flex items-center justify-between border-b border-gray-100/50 p-4"
-        >
-          <input
-            type="text"
-            value={noteStore.selectedNote.title}
-            oninput={(e) => handleInput(e, 'title')}
-            class="w-full bg-transparent text-2xl font-bold text-gray-800 placeholder-gray-400 outline-none"
-            placeholder="Note Title"
-          />
-          <!-- Updated to call the script function -->
-          <button
-            onclick={handleDelete}
-            class="rounded-lg p-2 text-red-400 transition-colors hover:bg-red-50 hover:text-red-600"
-            title="Delete Note"
-          >
-            <svg
-              xmlns="http://www.w3.org/2000/svg"
-              width="18"
-              height="18"
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="currentColor"
-              stroke-width="2"
-              stroke-linecap="round"
-              stroke-linejoin="round"
+      <!-- Toolbar / Header (Draggable) -->
+      <header
+        data-tauri-drag-region
+        class="flex h-14 items-center justify-between border-b border-slate-200/30 bg-white/10 px-6"
+      >
+        <div class="flex items-center gap-2 font-mono text-xs text-slate-400">
+          {#if noteStore.syncState === 'saving'}
+            <Loader2 size={12} class="animate-spin" />
+            Saving...
+          {:else if noteStore.syncState === 'saved'}
+            <CheckCircle2 size={12} class="text-emerald-500" />
+            Saved
+          {:else if noteStore.syncState === 'error'}
+            <span class="text-red-400">Sync Error</span>
+          {:else}
+            <span class="opacity-0 transition-opacity hover:opacity-100"
+              >v{noteStore.selectedNote.version}</span
             >
-              <path d="M3 6h18"></path>
-              <path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"></path>
-              <path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"></path>
-            </svg>
-          </button>
+          {/if}
         </div>
 
-        <!-- Content Area -->
+        <div class="flex items-center gap-2">
+          <button
+            onclick={() =>
+              noteStore.selectedNote &&
+              noteStore.delete(noteStore.selectedNote.id)}
+            class="rounded-lg p-2 text-slate-400 transition-all hover:bg-red-50 hover:text-red-500"
+            title="Delete Note"
+          >
+            <Trash2 size={18} />
+          </button>
+        </div>
+      </header>
+
+      <!-- Input Area -->
+      <div
+        class="mx-auto flex w-full max-w-3xl flex-1 flex-col overflow-hidden"
+        in:fade={{ duration: 150 }}
+      >
+        <!-- Title -->
+        <input
+          type="text"
+          value={noteStore.selectedNote.title}
+          oninput={(e) => handleInput(e, 'title')}
+          class="w-full bg-transparent px-8 pt-8 pb-4 text-3xl font-bold text-slate-800 outline-none placeholder:text-slate-300"
+          placeholder="Untitled Note"
+        />
+
+        <!-- Content -->
         <textarea
           value={noteStore.selectedNote.content}
           oninput={(e) => handleInput(e, 'content')}
-          class="w-full flex-1 resize-none bg-transparent p-6 text-lg leading-relaxed font-light text-gray-700 outline-none"
-          placeholder="Start typing..."
+          class="custom-scrollbar w-full flex-1 resize-none bg-transparent px-8 py-2 text-lg leading-relaxed text-slate-600 outline-none placeholder:text-slate-300"
+          placeholder="Start typing your thoughts..."
+          spellcheck="false"
         ></textarea>
-
-        <div
-          class="flex justify-between border-t border-gray-100/50 px-6 py-2 text-xs text-gray-400"
-        >
-          <span>ID: {noteStore.selectedNote.id.slice(0, 8)}...</span>
-          <span>v{noteStore.selectedNote.version}</span>
-        </div>
       </div>
     {:else}
-      <div class="flex h-full items-center justify-center text-gray-400">
-        <p>Select a note to start editing</p>
+      <!-- Empty State -->
+      <div
+        class="flex flex-1 flex-col items-center justify-center space-y-4 text-slate-400"
+      >
+        <div class="rounded-full bg-white/30 p-4 shadow-sm">
+          <PenLine size={48} class="text-indigo-300 opacity-30" />
+        </div>
+        <p class="text-sm font-medium opacity-60">
+          Select a note or create a new one
+        </p>
       </div>
     {/if}
   </section>

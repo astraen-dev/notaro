@@ -8,12 +8,31 @@ export interface Note {
   version: number;
 }
 
+export type SyncState = 'idle' | 'saving' | 'saved' | 'error';
+
 class NoteStore {
   // Svelte 5 Runes
   notes = $state<Note[]>([]);
   selectedId = $state<string | null>(null);
+  searchQuery = $state<string>('');
+  syncState = $state<SyncState>('idle');
 
-  // Derived state for the active note
+  // Derived: Filtered and Sorted (Instant Search)
+  filteredNotes = $derived.by(() => {
+    const query = this.searchQuery.toLowerCase();
+    return this.notes
+      .filter(
+        (n) =>
+          n.title.toLowerCase().includes(query) ||
+          n.content.toLowerCase().includes(query)
+      )
+      .sort(
+        (a, b) =>
+          new Date(b.updated_at).getTime() - new Date(a.updated_at).getTime()
+      );
+  });
+
+  // Derived: Active Note
   selectedNote = $derived(
     this.notes.find((n) => n.id === this.selectedId) || null
   );
@@ -36,35 +55,52 @@ class NoteStore {
 
   async add() {
     try {
+      this.syncState = 'saving';
       const newNote = await invoke<Note>('create_note', {
-        title: 'Untitled Note',
+        title: '',
         content: '',
       });
       this.notes = [newNote, ...this.notes];
       this.selectedId = newNote.id;
+      this.searchQuery = ''; // Clear search to show new note
+      this.syncState = 'saved';
+      setTimeout(() => (this.syncState = 'idle'), 2000);
     } catch (e) {
       console.error('Failed to create note:', e);
+      this.syncState = 'error';
     }
   }
 
   async save(id: string, title: string, content: string) {
     try {
+      this.syncState = 'saving';
+
       // Optimistic update
       const index = this.notes.findIndex((n) => n.id === id);
       if (index !== -1) {
-        this.notes[index] = { ...this.notes[index], title, content };
+        this.notes[index] = {
+          ...this.notes[index],
+          title,
+          content,
+          updated_at: new Date().toISOString(), // Update time locally for sort
+        };
       }
 
-      // Persist
+      // Persist to Rust Core
       const updated = await invoke<Note>('update_note', { id, title, content });
 
-      // Confirm update from server (handles version bumps etc)
-      if (index !== -1) {
-        this.notes[index] = updated;
+      // Reconcile
+      const reIndex = this.notes.findIndex((n) => n.id === id);
+      if (reIndex !== -1) {
+        this.notes[reIndex] = updated;
       }
+
+      this.syncState = 'saved';
+      setTimeout(() => (this.syncState = 'idle'), 2000);
     } catch (e) {
       console.error('Failed to save note:', e);
-      await this.load(); // Revert on error
+      this.syncState = 'error';
+      await this.load(); // Revert
     }
   }
 

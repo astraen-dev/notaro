@@ -35,6 +35,9 @@ importers:
       '@tauri-apps/plugin-opener':
         specifier: ^2.5.2
         version: 2.5.2
+      lucide-svelte:
+        specifier: ^0.554.0
+        version: 0.554.0(svelte@5.43.11)
     devDependencies:
       '@eslint/compat':
         specifier: ^2.0.0
@@ -1427,6 +1430,11 @@ packages:
 
   lru-cache@10.4.3:
     resolution: {integrity: sha512-JNAzZcXrCt42VGLuYz0zfAzDfAvJWW6AfYlDBQyDV5DClI2m5sAmK+OIO7s59XfsRsWHp02jAJrRadPRGTt6SQ==}
+
+  lucide-svelte@0.554.0:
+    resolution: {integrity: sha512-LLcpHi3SuKup0nVD1kKqo8FDZnjXJp48uST26GGh8Jcyrxqk5gmgpnvKmHsHox674UL3cPS1DCul/wFL7ybGqg==}
+    peerDependencies:
+      svelte: ^3 || ^4 || ^5.0.0-next.42
 
   magic-string@0.30.21:
     resolution: {integrity: sha512-vd2F4YUyEXKGcLHoq+TEyCjxueSeHnFxyyjNp80yg0XV4vUhnDer/lvvlqM/arB5bXQN5K2/3oinyCRyx8T2CQ==}
@@ -3100,6 +3108,10 @@ snapshots:
       wrap-ansi: 9.0.2
 
   lru-cache@10.4.3: {}
+
+  lucide-svelte@0.554.0(svelte@5.43.11):
+    dependencies:
+      svelte: 5.43.11
 
   magic-string@0.30.21:
     dependencies:
