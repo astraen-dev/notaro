@@ -86,31 +86,31 @@ body {
 
 /* Custom Range Slider Styling */
 input[type='range'] {
-    -webkit-appearance: none; /* Hides default slider */
-    width: 100%;
-    background: transparent;
-    cursor: pointer;
+  -webkit-appearance: none; /* Hides default slider */
+  width: 100%;
+  background: transparent;
+  cursor: pointer;
 }
 
 input[type='range']::-webkit-slider-thumb {
-    -webkit-appearance: none;
-    height: 22px;
-    width: 22px;
-    border-radius: 50%;
-    /* Dynamic color linked to the store */
-    background-color: hsl(var(--accent-hue), 80%, 60%);
-    border: 3px solid white;
-    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
-    margin-top: 0px;
-    transition: transform 0.1s ease;
+  -webkit-appearance: none;
+  height: 22px;
+  width: 22px;
+  border-radius: 50%;
+  /* Dynamic color linked to the store */
+  background-color: hsl(var(--accent-hue), 80%, 60%);
+  border: 3px solid white;
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
+  margin-top: 0px;
+  transition: transform 0.1s ease;
 }
 
 /* Hover Effect */
 input[type='range']::-webkit-slider-thumb:hover {
-    transform: scale(1.15);
+  transform: scale(1.15);
 }
 
 /* Active/Click Effect */
 input[type='range']::-webkit-slider-thumb:active {
-    transform: scale(0.95);
+  transform: scale(0.95);
 }
