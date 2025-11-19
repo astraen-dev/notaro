@@ -100,34 +100,44 @@
         </div>
 
         <!-- Accent Color Slider -->
-        <div class="space-y-2">
-          <div class="flex justify-between">
+        <div class="space-y-3">
+          <div class="flex items-center justify-between">
             <label
               for="accent-hue"
               class="text-xs font-semibold tracking-wider text-slate-500 uppercase"
             >
               Accent Color
             </label>
-            <!-- Preview Dot -->
-            <div
-              class="h-4 w-4 rounded-full shadow-sm"
-              style="background-color: hsl({settingsStore.settings
-                .accent_hue}, 80%, 60%)"
-            ></div>
+            <div class="flex items-center gap-2">
+              <!-- Numeric indicator -->
+              <span class="font-mono text-xs text-slate-400">
+                {settingsStore.settings.accent_hue}°
+              </span>
+              <!-- Live Preview Dot -->
+              <div
+                class="h-4 w-4 rounded-full shadow-sm ring-1 ring-black/5"
+                style="background-color: hsl({settingsStore.settings
+                  .accent_hue}, 80%, 60%)"
+              ></div>
+            </div>
           </div>
-          <input
-            id="accent-hue"
-            type="range"
-            min="0"
-            max="360"
-            value={settingsStore.settings.accent_hue}
-            oninput={(e) =>
-              settingsStore.update({
-                accent_hue: parseInt(e.currentTarget.value),
-              })}
-            class="h-2 w-full appearance-none rounded-lg bg-gradient-to-r from-red-500 via-green-500 to-blue-500"
-            aria-label="Adjust accent color hue"
-          />
+
+          <div class="relative flex items-center">
+            <input
+              id="accent-hue"
+              type="range"
+              min="0"
+              max="360"
+              value={settingsStore.settings.accent_hue}
+              oninput={(e) =>
+                settingsStore.update({
+                  accent_hue: parseInt(e.currentTarget.value),
+                })}
+              class="h-4 w-full appearance-none rounded-full outline-none focus:ring-2 focus:ring-slate-400/50"
+              style="background: linear-gradient(to right, hsl(0,100%,50%), hsl(60,100%,50%), hsl(120,100%,50%), hsl(180,100%,50%), hsl(240,100%,50%), hsl(300,100%,50%), hsl(360,100%,50%));"
+              aria-label="Adjust accent color hue"
+            />
+          </div>
         </div>
 
         <!-- Typography -->

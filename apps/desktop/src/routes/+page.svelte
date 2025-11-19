@@ -32,6 +32,7 @@
     const s = settingsStore.settings;
 
     // 1. Apply Font
+    // TODO: Should check for available fonts
     const fonts = {
       sans: '"Inter", sans-serif',
       serif: '"Merriweather", serif',
