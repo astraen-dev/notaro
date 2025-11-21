@@ -21,6 +21,9 @@
     Type,
     Undo2,
     Redo2,
+    Pin,
+    Folder,
+    FolderOpen,
   } from '@lucide/svelte';
   import '../app.css';
 
@@ -31,6 +34,9 @@
   // --- LOCAL EDITOR STATE ---
   let localTitle = $state('');
   let localContent = $state('');
+  let localFolder = $state<string | null>(null);
+  let localPinned = $state(false);
+
   let currentNoteId = $state<string | null>(null);
 
   // DOM References for Cursor Restoration
@@ -55,9 +61,13 @@
       if (noteStore.selectedNote) {
         localTitle = noteStore.selectedNote.title;
         localContent = noteStore.selectedNote.content;
+        localFolder = noteStore.selectedNote.folder;
+        localPinned = noteStore.selectedNote.is_pinned;
       } else {
         localTitle = '';
         localContent = '';
+        localFolder = null;
+        localPinned = false;
       }
 
       // Reset History on note switch
@@ -124,9 +134,7 @@
     localContent = state.content;
 
     // 2. Persist
-    if (noteStore.selectedNote) {
-      noteStore.save(noteStore.selectedNote.id, localTitle, localContent);
-    }
+    saveProperties();
 
     // 3. Restore Focus
     await tick();
@@ -141,7 +149,29 @@
     }
   }
 
+  function saveProperties() {
+    if (!noteStore.selectedNote) return;
+    noteStore.save(
+      noteStore.selectedNote.id,
+      localTitle,
+      localContent,
+      localFolder,
+      localPinned
+    );
+  }
+
   // --- ACTIONS ---
+  function togglePin() {
+    localPinned = !localPinned;
+    saveProperties();
+  }
+
+  function updateFolder(e: Event) {
+    const val = (e.target as HTMLInputElement).value.trim();
+    localFolder = val === '' ? null : val;
+    saveProperties();
+  }
+
   function performUndo() {
     if (!history.canUndo) return;
 
@@ -193,7 +223,7 @@
     const val = target.value;
     const now = Date.now();
 
-    // 1. Snapshot logic moved to component controller, storage in Store
+    // History Snapshot
     if (now - lastInputTime > HISTORY_DEBOUNCE) {
       history.snapshot({
         title: localTitle, // capture OLD state
@@ -204,18 +234,14 @@
     }
     lastInputTime = now;
 
-    // 2. Update Local
+    // Update Local
     if (field === 'title') localTitle = val;
     if (field === 'content') localContent = val;
 
-    // 3. Persist
-    if (!noteStore.selectedNote) return;
-    const id = noteStore.selectedNote.id;
-
+    // Debounced Save
     clearTimeout(timer);
     timer = setTimeout(() => {
-      // Send the local state to the store
-      noteStore.save(id, localTitle, localContent);
+      saveProperties();
     }, 400);
   }
 
@@ -288,6 +314,56 @@
       </div>
     </div>
 
+    <!-- Navigation Tabs -->
+    <div class="flex gap-1 px-4 pb-2">
+      <button
+        onclick={() => noteStore.selectFolder('all')}
+        class="flex-1 rounded-lg border border-transparent py-1 text-xs font-medium transition-colors
+            {noteStore.selectedFolder === 'all'
+          ? 'bg-indigo-100/50 text-indigo-700 shadow-sm'
+          : 'text-slate-500 hover:bg-white/50'}"
+      >
+        All
+      </button>
+      <button
+        onclick={() => noteStore.selectFolder('pinned')}
+        class="flex flex-1 items-center justify-center gap-1 rounded-lg border border-transparent py-1 text-xs font-medium transition-colors
+            {noteStore.selectedFolder === 'pinned'
+          ? 'bg-indigo-100/50 text-indigo-700 shadow-sm'
+          : 'text-slate-500 hover:bg-white/50'}"
+      >
+        <Pin
+          size={10}
+          class={noteStore.selectedFolder === 'pinned' ? 'fill-current' : ''}
+        /> Pinned
+      </button>
+    </div>
+
+    <!-- Folder List -->
+    {#if noteStore.availableFolders.length > 0}
+      <div class="mb-1 px-4 py-1">
+        <div
+          class="mb-1.5 text-[10px] font-bold tracking-wider text-slate-400 uppercase"
+        >
+          Folders
+        </div>
+        <div class="flex flex-wrap gap-1.5">
+          {#each noteStore.availableFolders as folder (folder)}
+            <button
+              onclick={() => noteStore.selectFolder(folder)}
+              class="flex items-center gap-1 rounded-md border px-2 py-1 text-[11px] transition-all
+                    {noteStore.selectedFolder === folder
+                ? 'border-indigo-200 bg-white text-indigo-600 shadow-sm'
+                : 'border-transparent bg-white/30 text-slate-600 hover:bg-white/50'}"
+            >
+              <Folder size={10} />
+              {folder}
+            </button>
+          {/each}
+        </div>
+      </div>
+    {/if}
+
     <!-- Search Bar -->
     <div class="px-4 py-2">
       <div class="group relative">
@@ -316,11 +392,14 @@
         >
           <span class="mb-1 flex w-full items-start justify-between">
             <span
-              class="truncate pr-2 font-semibold {noteStore.selectedId ===
+              class="flex items-center gap-1.5 truncate pr-2 font-semibold {noteStore.selectedId ===
               note.id
                 ? 'text-slate-800'
                 : 'text-slate-600'}"
             >
+              {#if note.is_pinned}
+                <Pin size={11} class="fill-current opacity-70" />
+              {/if}
               {note.title || 'Untitled Note'}
             </span>
             <span
@@ -358,7 +437,7 @@
         data-tauri-drag-region
         class="flex h-14 items-center justify-between border-b border-slate-200/30 bg-white/10 px-4"
       >
-        <div class="flex items-center gap-2">
+        <div class="flex items-center gap-4">
           <!-- Sidebar Toggle Button -->
           <button
             onclick={toggleSidebar}
@@ -370,11 +449,36 @@
             <PanelLeft size={18} />
           </button>
 
-          <div class="mx-1 h-4 w-px bg-slate-300/30"></div>
+          <!-- Folder / Pin Controls -->
+          <div class="flex items-center gap-2">
+            <button
+              onclick={togglePin}
+              class="rounded-lg p-1.5 transition-all hover:bg-white/50 active:scale-90
+                    {localPinned
+                ? 'text-indigo-500'
+                : 'text-slate-400 hover:text-slate-600'}"
+              title={localPinned ? 'Unpin Note' : 'Pin Note'}
+            >
+              <Pin size={16} class={localPinned ? 'fill-current' : ''} />
+            </button>
+
+            <div
+              class="flex items-center gap-1.5 rounded-lg border border-transparent bg-slate-100/50 px-2.5 py-1.5 transition-all focus-within:border-indigo-200/50 focus-within:bg-white/80 hover:bg-white/50"
+            >
+              <FolderOpen size={14} class="text-slate-400" />
+              <input
+                type="text"
+                value={localFolder || ''}
+                onchange={updateFolder}
+                placeholder="No Folder"
+                class="w-24 bg-transparent text-xs font-medium text-slate-600 outline-none placeholder:text-slate-400"
+              />
+            </div>
+          </div>
 
           <!-- Sync Status -->
           <div
-            class="flex items-center gap-2 font-mono text-xs text-slate-400 select-none"
+            class="flex items-center gap-2 border-l border-slate-300/30 pl-4 font-mono text-xs text-slate-400 select-none"
           >
             {#if noteStore.syncState === 'saving'}
               <Loader2 size={12} class="animate-spin" />

@@ -43,20 +43,34 @@ impl DatabaseConnection {
             )",
             [],
         )?;
+
+        // MIGRATION: Add columns if they don't exist (safe for existing DBs)
+        let _ = self.conn.execute("ALTER TABLE notes ADD COLUMN folder TEXT", []);
+        let _ = self
+            .conn
+            .execute("ALTER TABLE notes ADD COLUMN is_pinned BOOLEAN NOT NULL DEFAULT 0", []);
+
         Ok(())
     }
 
     // --- CRUD Operations ---
 
-    pub fn create_note(&self, title: String, content: String) -> Result<Note> {
-        let note = Note::new(title, content);
+    pub fn create_note(
+        &self,
+        title: String,
+        content: String,
+        folder: Option<String>,
+    ) -> Result<Note> {
+        let note = Note::new(title, content, folder);
         self.conn.execute(
-            "INSERT INTO notes (id, title, content, created_at, updated_at, version, is_deleted)
-             VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7)",
+            "INSERT INTO notes (id, title, content, folder, is_pinned, created_at, updated_at, version, is_deleted)
+             VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8, ?9)",
             params![
                 note.id,
                 note.title,
                 note.content,
+                note.folder,
+                note.is_pinned,
                 note.created_at.to_rfc3339(),
                 note.updated_at.to_rfc3339(),
                 note.version,
@@ -68,10 +82,10 @@ impl DatabaseConnection {
 
     pub fn get_all_notes(&self) -> Result<Vec<Note>> {
         let mut stmt = self.conn.prepare(
-            "SELECT id, title, content, created_at, updated_at, version, is_deleted
+            "SELECT id, title, content, folder, is_pinned, created_at, updated_at, version, is_deleted
              FROM notes
              WHERE is_deleted = 0
-             ORDER BY updated_at DESC",
+             ORDER BY is_pinned DESC, updated_at DESC",
         )?;
 
         let note_iter = stmt.query_map([], |row| {
@@ -79,14 +93,16 @@ impl DatabaseConnection {
                 id: row.get(0)?,
                 title: row.get(1)?,
                 content: row.get(2)?,
-                created_at: DateTime::parse_from_rfc3339(&row.get::<_, String>(3)?)
+                folder: row.get(3)?,
+                is_pinned: row.get(4)?,
+                created_at: DateTime::parse_from_rfc3339(&row.get::<_, String>(5)?)
                     .map_err(|_| rusqlite::Error::ExecuteReturnedResults)?
                     .with_timezone(&Utc),
-                updated_at: DateTime::parse_from_rfc3339(&row.get::<_, String>(4)?)
+                updated_at: DateTime::parse_from_rfc3339(&row.get::<_, String>(6)?)
                     .map_err(|_| rusqlite::Error::ExecuteReturnedResults)?
                     .with_timezone(&Utc),
-                version: row.get(5)?,
-                is_deleted: row.get(6)?,
+                version: row.get(7)?,
+                is_deleted: row.get(8)?,
             })
         })?;
 
@@ -97,18 +113,23 @@ impl DatabaseConnection {
         Ok(notes)
     }
 
-    pub fn update_note(&self, id: &str, title: String, content: String) -> Result<Note> {
+    pub fn update_note(
+        &self,
+        id: &str,
+        title: String,
+        content: String,
+        folder: Option<String>,
+        is_pinned: bool,
+    ) -> Result<Note> {
         let now = Utc::now();
 
-        // We bump version by 1 locally.
         self.conn.execute(
             "UPDATE notes
-             SET title = ?1, content = ?2, updated_at = ?3, version = version + 1
-             WHERE id = ?4",
-            params![title, content, now.to_rfc3339(), id],
+             SET title = ?1, content = ?2, folder = ?3, is_pinned = ?4, updated_at = ?5, version = version + 1
+             WHERE id = ?6",
+            params![title, content, folder, is_pinned, now.to_rfc3339(), id],
         )?;
 
-        // Retrieve the updated note to return it
         self.get_note_by_id(id)
     }
 
@@ -126,7 +147,7 @@ impl DatabaseConnection {
 
     fn get_note_by_id(&self, id: &str) -> Result<Note> {
         let mut stmt = self.conn.prepare(
-            "SELECT id, title, content, created_at, updated_at, version, is_deleted
+            "SELECT id, title, content, folder, is_pinned, created_at, updated_at, version, is_deleted
              FROM notes WHERE id = ?1",
         )?;
 
@@ -135,14 +156,16 @@ impl DatabaseConnection {
                 id: row.get(0)?,
                 title: row.get(1)?,
                 content: row.get(2)?,
-                created_at: DateTime::parse_from_rfc3339(&row.get::<_, String>(3)?)
+                folder: row.get(3)?,
+                is_pinned: row.get(4)?,
+                created_at: DateTime::parse_from_rfc3339(&row.get::<_, String>(5)?)
                     .map_err(|_| rusqlite::Error::ExecuteReturnedResults)?
                     .with_timezone(&Utc),
-                updated_at: DateTime::parse_from_rfc3339(&row.get::<_, String>(4)?)
+                updated_at: DateTime::parse_from_rfc3339(&row.get::<_, String>(6)?)
                     .map_err(|_| rusqlite::Error::ExecuteReturnedResults)?
                     .with_timezone(&Utc),
-                version: row.get(5)?,
-                is_deleted: row.get(6)?,
+                version: row.get(7)?,
+                is_deleted: row.get(8)?,
             })
         })
         .map_err(Into::into)
@@ -194,7 +217,7 @@ impl DatabaseConnection {
     /// Get all notes (including deleted ones) that have a version higher than the provided version.
     pub fn get_changes_since(&self, version: i32) -> Result<Vec<Note>> {
         let mut stmt = self.conn.prepare(
-            "SELECT id, title, content, created_at, updated_at, version, is_deleted
+            "SELECT id, title, content, folder, is_pinned, created_at, updated_at, version, is_deleted
              FROM notes
              WHERE version > ?1",
         )?;
@@ -204,14 +227,16 @@ impl DatabaseConnection {
                 id: row.get(0)?,
                 title: row.get(1)?,
                 content: row.get(2)?,
-                created_at: DateTime::parse_from_rfc3339(&row.get::<_, String>(3)?)
+                folder: row.get(3)?,
+                is_pinned: row.get(4)?,
+                created_at: DateTime::parse_from_rfc3339(&row.get::<_, String>(5)?)
                     .map_err(|_| rusqlite::Error::ExecuteReturnedResults)?
                     .with_timezone(&Utc),
-                updated_at: DateTime::parse_from_rfc3339(&row.get::<_, String>(4)?)
+                updated_at: DateTime::parse_from_rfc3339(&row.get::<_, String>(6)?)
                     .map_err(|_| rusqlite::Error::ExecuteReturnedResults)?
                     .with_timezone(&Utc),
-                version: row.get(5)?,
-                is_deleted: row.get(6)?,
+                version: row.get(7)?,
+                is_deleted: row.get(8)?,
             })
         })?;
 
@@ -241,13 +266,16 @@ impl DatabaseConnection {
                 Some(v) => {
                     // If remote version is higher, we overwrite local
                     if remote_note.version > v {
+                        // UPDATE with new fields
                         tx.execute(
                             "UPDATE notes
-                             SET title = ?1, content = ?2, created_at = ?3, updated_at = ?4, version = ?5, is_deleted = ?6
-                             WHERE id = ?7",
+                             SET title = ?1, content = ?2, folder = ?3, is_pinned = ?4, created_at = ?5, updated_at = ?6, version = ?7, is_deleted = ?8
+                             WHERE id = ?9",
                             params![
                                 remote_note.title,
                                 remote_note.content,
+                                remote_note.folder,
+                                remote_note.is_pinned,
                                 remote_note.created_at.to_rfc3339(),
                                 remote_note.updated_at.to_rfc3339(),
                                 remote_note.version,
@@ -259,14 +287,16 @@ impl DatabaseConnection {
                     // If local version is higher or equal, we ignore the remote change
                 }
                 None => {
-                    // We don't have it, insert it
+                    // INSERT with new fields
                     tx.execute(
-                        "INSERT INTO notes (id, title, content, created_at, updated_at, version, is_deleted)
-                         VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7)",
+                        "INSERT INTO notes (id, title, content, folder, is_pinned, created_at, updated_at, version, is_deleted)
+                         VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8, ?9)",
                         params![
                             remote_note.id,
                             remote_note.title,
                             remote_note.content,
+                            remote_note.folder,
+                            remote_note.is_pinned,
                             remote_note.created_at.to_rfc3339(),
                             remote_note.updated_at.to_rfc3339(),
                             remote_note.version,
@@ -295,17 +325,22 @@ mod tests {
         let db = get_mem_db();
 
         // 1. Create
-        let note = db.create_note("Hello".into(), "World".into()).unwrap();
+        let note = db.create_note("Hello".into(), "World".into(), Some("Work".into())).unwrap();
         assert_eq!(note.title, "Hello");
+        assert_eq!(note.folder, Some("Work".to_string()));
         assert_eq!(note.version, 1);
 
         // 2. Read
         let fetched = db.get_note_by_id(&note.id).unwrap();
         assert_eq!(fetched.title, "Hello");
+        assert_eq!(fetched.folder, Some("Work".to_string()));
 
         // 3. Update
-        let updated = db.update_note(&note.id, "Hello 2".into(), "Updated".into()).unwrap();
+        let updated =
+            db.update_note(&note.id, "Hello 2".into(), "Updated".into(), None, true).unwrap();
         assert_eq!(updated.title, "Hello 2");
+        assert_eq!(updated.folder, None);
+        assert_eq!(updated.is_pinned, true);
         assert_eq!(updated.version, 2); // Version should bump
 
         // 4. Soft Delete
@@ -322,15 +357,15 @@ mod tests {
     #[test]
     fn test_sync_get_changes() {
         let db = get_mem_db();
-        let note1 = db.create_note("A".into(), "Content A".into()).unwrap(); // v1
-        let _note2 = db.create_note("B".into(), "Content B".into()).unwrap(); // v1
+        let note1 = db.create_note("A".into(), "Content A".into(), None).unwrap(); // v1
+        let _note2 = db.create_note("B".into(), "Content B".into(), None).unwrap(); // v1
 
         // Get changes since version 0 (should get both)
         let changes = db.get_changes_since(0).unwrap();
         assert_eq!(changes.len(), 2);
 
         // Update note1 -> becomes v2
-        db.update_note(&note1.id, "A2".into(), "C2".into()).unwrap();
+        db.update_note(&note1.id, "A2".into(), "C2".into(), None, false).unwrap();
 
         // Get changes since version 1 (should get only note1)
         let changes_since_1 = db.get_changes_since(1).unwrap();
@@ -342,7 +377,7 @@ mod tests {
     #[test]
     fn test_merge_remote_newer_wins() {
         let mut db = get_mem_db();
-        let note = db.create_note("Local".into(), "Local".into()).unwrap(); // v1
+        let note = db.create_note("Local".into(), "Local".into(), None).unwrap(); // v1
 
         // Create a remote note object that represents a newer version of the same note
         let mut remote_note = note.clone();
@@ -359,10 +394,10 @@ mod tests {
     #[test]
     fn test_merge_remote_stale_ignored() {
         let mut db = get_mem_db();
-        let note = db.create_note("Local".into(), "Local".into()).unwrap(); // v1
+        let note = db.create_note("Local".into(), "Local".into(), None).unwrap(); // v1
 
         // Bump local to v2
-        db.update_note(&note.id, "Local V2".into(), "C".into()).unwrap();
+        db.update_note(&note.id, "Local V2".into(), "C".into(), None, false).unwrap();
 
         // Create a remote note that is stale (v1)
         let mut remote_note = note.clone(); // copy of v1
@@ -378,7 +413,7 @@ mod tests {
     #[test]
     fn test_merge_new_note() {
         let mut db = get_mem_db();
-        let remote_note = Note::new("New Remote".into(), "Content".into());
+        let remote_note = Note::new("New Remote".into(), "Content".into(), None);
 
         db.merge_changes(vec![remote_note.clone()]).unwrap();
 

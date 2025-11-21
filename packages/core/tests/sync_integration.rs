@@ -15,7 +15,7 @@ fn test_two_device_sync_scenario() {
 
     // 2. Device A creates a note
     let original_note = db_a
-        .create_note("Meeting Notes".into(), "Discuss sync logic".into())
+        .create_note("Meeting Notes".into(), "Discuss sync logic".into(), Some("Work".into()))
         .expect("Device A failed to create note");
 
     assert_eq!(original_note.version, 1);
@@ -44,6 +44,8 @@ fn test_two_device_sync_scenario() {
             &original_note.id,
             "Meeting Notes (Revised)".into(),
             "Discuss sync logic + tests".into(),
+            Some("Work".into()),
+            true,
         )
         .expect("Device B failed to update");
 
@@ -74,41 +76,39 @@ fn test_conflict_resolution_last_write_wins() {
     let mut db_a = create_device_db();
     let mut db_b = create_device_db();
 
-    // Start with same note on both
-    let note = db_a.create_note("Base".into(), "Base".into()).unwrap();
-    db_b.merge_changes(vec![note.clone()]).unwrap();
+    // 1. Start with same note on both
+    // Device A creates it
+    let note =
+        db_a.create_note("Base".into(), "Base".into(), None).expect("Failed to create base note");
 
-    // Device A updates note to v2
-    let note_a_v2 = db_a.update_note(&note.id, "Version A".into(), "Content A".into()).unwrap();
+    // Device B must have the note before it can update it
+    db_b.merge_changes(vec![note.clone()]).expect("Failed to sync initial note to B");
 
-    // Device B updates SAME note to v2 (Simulate race condition / concurrent offline edit)
-    // Note: In our current simplified logic, we bump version locally.
-    // If both bump to 2 independently, the last one to MERGE wins, or we need a tiebreaker.
-    // Current implementation: if remote.version > local.version, overwrite.
-    // If remote.version == local.version, we currently IGNORE remote (Local Wins Tie).
+    // 2. Device A updates note to v2
+    let note_a_v2 = db_a
+        .update_note(&note.id, "Version A".into(), "Content A".into(), None, false)
+        .expect("Device A failed to update");
 
-    let note_b_v2 = db_b.update_note(&note.id, "Version B".into(), "Content B".into()).unwrap();
+    // 3. Device B updates SAME note to v2 (Simulate race condition / concurrent offline edit)
+    // This logic bumps local version to 2.
+    let note_b_v2 = db_b
+        .update_note(&note.id, "Version B".into(), "Content B".into(), None, false)
+        .expect("Device B failed to update");
 
-    // Sync A -> B (B has v2, A sends v2)
-    // B should ignore A's changes because B.version (2) is not < A.version (2).
+    // 4. Sync A -> B (B has v2, A sends v2)
+    // Current logic: If remote.version (2) > local.version (2) -> False.
+    // B ignores A's changes. Local wins tie.
     db_b.merge_changes(vec![note_a_v2.clone()]).unwrap();
 
     let current_b = db_b.get_all_notes().unwrap().pop().unwrap();
     assert_eq!(current_b.title, "Version B"); // Local B kept its own change
 
-    // Sync B -> A (A has v2, B sends v2)
-    // A should ignore B's changes
+    // 5. Sync B -> A (A has v2, B sends v2)
+    // A ignores B's changes. Local wins tie.
     db_a.merge_changes(vec![note_b_v2.clone()]).unwrap();
 
     let current_a = db_a.get_all_notes().unwrap().pop().unwrap();
     assert_eq!(current_a.title, "Version A"); // Local A kept its own change
-
-    // Result: Divergence (Both stayed at v2 with different content).
-    // Correction: Ideally, one creates v3.
-    // This test documents current behavior. To fix this in Phase 2/3, we would need
-    // vector clocks or Client IDs to break ties deterministically.
-    // For "Hyper-lightweight", manual resolution or "Latest timestamp wins" is the next step.
-    // For now, we assert the current behavior is stable/predictable.
 }
 
 #[test]
@@ -117,7 +117,7 @@ fn test_delete_propagation() {
     let mut db_b = create_device_db();
 
     // Shared note
-    let note = db_a.create_note("To Delete".into(), "Bye".into()).unwrap();
+    let note = db_a.create_note("To Delete".into(), "Bye".into(), None).unwrap();
     db_b.merge_changes(vec![note.clone()]).unwrap();
 
     // Device A deletes

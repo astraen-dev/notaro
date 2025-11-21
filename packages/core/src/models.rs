@@ -7,6 +7,8 @@ pub struct Note {
     pub id: String,
     pub title: String,
     pub content: String,
+    pub folder: Option<String>,
+    pub is_pinned: bool,
     pub created_at: DateTime<Utc>,
     pub updated_at: DateTime<Utc>,
     /// Monotonically increasing version number for sync resolution
@@ -16,12 +18,14 @@ pub struct Note {
 }
 
 impl Note {
-    pub fn new(title: String, content: String) -> Self {
+    pub fn new(title: String, content: String, folder: Option<String>) -> Self {
         let now = Utc::now();
         Self {
             id: Uuid::new_v4().to_string(),
             title,
             content,
+            folder,
+            is_pinned: false,
             created_at: now,
             updated_at: now,
             version: 1,
@@ -76,9 +80,11 @@ mod tests {
     fn test_note_creation() {
         let title = "Test Note".to_string();
         let content = "This is content".to_string();
-        let note = Note::new(title.clone(), content.clone());
+        let note = Note::new(title.clone(), content.clone(), Some("Work".to_string()));
 
         assert_eq!(note.title, title);
+        assert_eq!(note.folder, Some("Work".to_string()));
+        assert_eq!(note.is_pinned, false);
         assert_eq!(note.content, content);
         assert_eq!(note.version, 1);
         assert_eq!(note.is_deleted, false);
@@ -102,7 +108,7 @@ mod tests {
         );
 
         // Test PushUpdates deserialization
-        let note = Note::new("A".into(), "B".into());
+        let note = Note::new("A".into(), "B".into(), Some("C".to_string()));
         let json_input = json!({
             "type": "PushUpdates",
             "payload": {

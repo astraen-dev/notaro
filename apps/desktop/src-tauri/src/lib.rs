@@ -15,9 +15,14 @@ fn get_notes(state: State<AppState>) -> Result<Vec<Note>, String> {
 }
 
 #[tauri::command]
-fn create_note(state: State<AppState>, title: String, content: String) -> Result<Note, String> {
+fn create_note(
+    state: State<AppState>,
+    title: String,
+    content: String,
+    folder: Option<String>,
+) -> Result<Note, String> {
     let db = state.db.lock().map_err(|_| "Failed to lock mutex")?;
-    db.create_note(title, content).map_err(|e| e.to_string())
+    db.create_note(title, content, folder).map_err(|e| e.to_string())
 }
 
 #[tauri::command]
@@ -26,9 +31,11 @@ fn update_note(
     id: String,
     title: String,
     content: String,
+    folder: Option<String>,
+    is_pinned: bool,
 ) -> Result<Note, String> {
     let db = state.db.lock().map_err(|_| "Failed to lock mutex")?;
-    db.update_note(&id, title, content).map_err(|e| e.to_string())
+    db.update_note(&id, title, content, folder, is_pinned).map_err(|e| e.to_string())
 }
 
 #[tauri::command]
