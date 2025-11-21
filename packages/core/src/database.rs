@@ -84,7 +84,6 @@ impl DatabaseConnection {
         let mut stmt = self.conn.prepare(
             "SELECT id, title, content, folder, is_pinned, created_at, updated_at, version, is_deleted
              FROM notes
-             WHERE is_deleted = 0
              ORDER BY is_pinned DESC, updated_at DESC",
         )?;
 
@@ -123,6 +122,8 @@ impl DatabaseConnection {
     ) -> Result<Note> {
         let now = Utc::now();
 
+        // Only allow updates if note is not deleted (optional safeguard, or allow editing trash)
+        // For now, we allow updates, but usually UI blocks it.
         self.conn.execute(
             "UPDATE notes
              SET title = ?1, content = ?2, folder = ?3, is_pinned = ?4, updated_at = ?5, version = version + 1
@@ -133,12 +134,33 @@ impl DatabaseConnection {
         self.get_note_by_id(id)
     }
 
+    /// Deletes a note.
+    /// 1. If the note is active, it is soft-deleted (moved to trash).
+    /// 2. If the note is already soft-deleted, it is permanently removed.
     pub fn delete_note(&self, id: &str) -> Result<()> {
+        let note = self.get_note_by_id(id)?;
+
+        if note.is_deleted {
+            // Hard Delete
+            self.conn.execute("DELETE FROM notes WHERE id = ?1", params![id])?;
+        } else {
+            // Soft Delete
+            let now = Utc::now();
+            self.conn.execute(
+                "UPDATE notes
+                 SET is_deleted = 1, updated_at = ?1, version = version + 1
+                 WHERE id = ?2",
+                params![now.to_rfc3339(), id],
+            )?;
+        }
+        Ok(())
+    }
+
+    pub fn restore_note(&self, id: &str) -> Result<()> {
         let now = Utc::now();
-        // Soft delete, bump version for sync
         self.conn.execute(
             "UPDATE notes
-             SET is_deleted = 1, updated_at = ?1, version = version + 1
+             SET is_deleted = 0, updated_at = ?1, version = version + 1
              WHERE id = ?2",
             params![now.to_rfc3339(), id],
         )?;
@@ -349,9 +371,11 @@ mod tests {
         assert!(deleted.is_deleted);
         assert_eq!(deleted.version, 3); // Version should bump on delete
 
-        // 5. Verify get_all_notes excludes deleted
+        // 5. Verify get_all_notes INCLUDES deleted notes (for Trash folder support)
         let all = db.get_all_notes().unwrap();
-        assert_eq!(all.len(), 0);
+        assert_eq!(all.len(), 1);
+        assert_eq!(all[0].id, note.id);
+        assert!(all[0].is_deleted);
     }
 
     #[test]

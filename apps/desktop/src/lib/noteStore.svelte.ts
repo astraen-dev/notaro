@@ -8,56 +8,63 @@ export interface Note {
   version: number;
   folder: string | null;
   is_pinned: boolean;
+  is_deleted: boolean;
 }
 
 export type SyncState = 'idle' | 'saving' | 'saved' | 'error';
 
 class NoteStore {
-  // Svelte 5 Runes
   notes = $state<Note[]>([]);
   selectedId = $state<string | null>(null);
   searchQuery = $state<string>('');
 
   // Navigation State
-  selectedFolder = $state<string | 'all' | 'pinned'>('all');
+  selectedFolder = $state<string | 'all' | 'pinned' | 'trash'>('all');
   syncState = $state<SyncState>('idle');
 
   // Derived: Unique Folders List
   availableFolders = $derived.by(() => {
     const folders: Record<string, boolean> = {};
     this.notes.forEach((n) => {
-      if (n.folder && n.folder.trim() !== '') {
+      // Only show folders from active notes
+      if (!n.is_deleted && n.folder && n.folder.trim() !== '') {
         folders[n.folder] = true;
       }
     });
     return Object.keys(folders).sort();
   });
 
-  // Derived: Filtered and Sorted (Search + Navigation + Sort)
+  // Derived: Filtered and Sorted
   filteredNotes = $derived.by(() => {
     const query = this.searchQuery.toLowerCase();
 
-    // 1. Filter
     const filtered = this.notes.filter((n) => {
-      // Search Text
+      // 1. Handle Trash Context explicitly
+      if (this.selectedFolder === 'trash') {
+        // In trash mode, ONLY show deleted notes
+        if (!n.is_deleted) return false;
+      } else {
+        // In normal modes, ONLY show active notes
+        if (n.is_deleted) return false;
+      }
+
+      // 2. Search Text
       const matchesSearch =
         n.title.toLowerCase().includes(query) ||
         n.content.toLowerCase().includes(query);
 
       if (!matchesSearch) return false;
 
-      // Navigation Context
+      // 3. Navigation Context
+      if (this.selectedFolder === 'trash') return true; // Already filtered by is_deleted
       if (this.selectedFolder === 'all') return true;
       if (this.selectedFolder === 'pinned') return n.is_pinned;
       return n.folder === this.selectedFolder;
     });
 
-    // 2. Sort: Pinned first, then updated date
+    // Sort: Pinned first, then updated date
     return filtered.sort((a, b) => {
-      // If one is pinned and the other isn't, pinned comes first
       if (a.is_pinned !== b.is_pinned) return a.is_pinned ? -1 : 1;
-
-      // Otherwise sort by recency
       return (
         new Date(b.updated_at).getTime() - new Date(a.updated_at).getTime()
       );
@@ -89,6 +96,9 @@ class NoteStore {
   }
 
   async add() {
+    // Prevent creating notes while in Trash
+    if (this.selectedFolder === 'trash') return;
+
     try {
       this.syncState = 'saving';
 
@@ -165,12 +175,44 @@ class NoteStore {
   async delete(id: string) {
     try {
       await invoke('delete_note', { id });
-      this.notes = this.notes.filter((n) => n.id !== id);
-      if (this.selectedId === id) {
-        this.selectedId = null;
+
+      const index = this.notes.findIndex((n) => n.id === id);
+      if (index === -1) return;
+
+      const note = this.notes[index];
+
+      if (note.is_deleted) {
+        // Case 2: Hard Delete (Already in trash) -> Remove from store
+        this.notes = this.notes.filter((n) => n.id !== id);
+        if (this.selectedId === id) this.selectedId = null;
+      } else {
+        // Case 1: Soft Delete -> Mark as deleted in store
+        this.notes[index] = { ...note, is_deleted: true };
+        // If we are not in trash view, this note disappears, so deselect
+        if (this.selectedFolder !== 'trash' && this.selectedId === id) {
+          this.selectedId = null;
+        }
       }
     } catch (e) {
       console.error('Failed to delete note:', e);
+    }
+  }
+
+  async restore(id: string) {
+    try {
+      await invoke('restore_note', { id });
+
+      const index = this.notes.findIndex((n) => n.id === id);
+      if (index !== -1) {
+        // Mark as active
+        this.notes[index] = { ...this.notes[index], is_deleted: false };
+        // Note disappears from Trash view
+        if (this.selectedFolder === 'trash' && this.selectedId === id) {
+          this.selectedId = null;
+        }
+      }
+    } catch (e) {
+      console.error('Failed to restore note:', e);
     }
   }
 }

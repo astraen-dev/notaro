@@ -24,6 +24,8 @@
     Pin,
     Folder,
     FolderOpen,
+    Trash,
+    RotateCcw,
   } from '@lucide/svelte';
   import '../app.css';
 
@@ -337,6 +339,15 @@
           class={noteStore.selectedFolder === 'pinned' ? 'fill-current' : ''}
         /> Pinned
       </button>
+      <button
+        onclick={() => noteStore.selectFolder('trash')}
+        class="flex flex-1 items-center justify-center gap-1 rounded-lg border border-transparent py-1 text-xs font-medium transition-colors
+            {noteStore.selectedFolder === 'trash'
+          ? 'bg-red-100/50 text-red-700 shadow-sm'
+          : 'text-slate-500 hover:bg-white/50'}"
+      >
+        <Trash size={10} /> Trash
+      </button>
     </div>
 
     <!-- Folder List -->
@@ -432,6 +443,15 @@
     class="relative flex flex-1 flex-col overflow-hidden rounded-2xl border border-white/60 bg-white/60 shadow-2xl backdrop-blur-2xl transition-all duration-300"
   >
     {#if noteStore.selectedNote}
+      <!-- Trash Banner -->
+      {#if noteStore.selectedNote.is_deleted}
+        <div
+          class="flex w-full items-center justify-center gap-2 bg-red-50/80 px-4 py-2 text-xs font-medium text-red-600 dark:bg-red-900/20 dark:text-red-400"
+        >
+          <Trash size={14} />
+          <span>This note is in the trash. Editing is disabled.</span>
+        </div>
+      {/if}
       <!-- Toolbar / Header -->
       <header
         data-tauri-drag-region
@@ -449,32 +469,34 @@
             <PanelLeft size={18} />
           </button>
 
-          <!-- Folder / Pin Controls -->
-          <div class="flex items-center gap-2">
-            <button
-              onclick={togglePin}
-              class="rounded-lg p-1.5 transition-all hover:bg-white/50 active:scale-90
+          {#if !noteStore.selectedNote.is_deleted}
+            <!-- Folder / Pin Controls -->
+            <div class="flex items-center gap-2">
+              <button
+                onclick={togglePin}
+                class="rounded-lg p-1.5 transition-all hover:bg-white/50 active:scale-90
                     {localPinned
-                ? 'text-indigo-500'
-                : 'text-slate-400 hover:text-slate-600'}"
-              title={localPinned ? 'Unpin Note' : 'Pin Note'}
-            >
-              <Pin size={16} class={localPinned ? 'fill-current' : ''} />
-            </button>
+                  ? 'text-indigo-500'
+                  : 'text-slate-400 hover:text-slate-600'}"
+                title={localPinned ? 'Unpin Note' : 'Pin Note'}
+              >
+                <Pin size={16} class={localPinned ? 'fill-current' : ''} />
+              </button>
 
-            <div
-              class="flex items-center gap-1.5 rounded-lg border border-transparent bg-slate-100/50 px-2.5 py-1.5 transition-all focus-within:border-indigo-200/50 focus-within:bg-white/80 hover:bg-white/50"
-            >
-              <FolderOpen size={14} class="text-slate-400" />
-              <input
-                type="text"
-                value={localFolder || ''}
-                onchange={updateFolder}
-                placeholder="No Folder"
-                class="w-24 bg-transparent text-xs font-medium text-slate-600 outline-none placeholder:text-slate-400"
-              />
+              <div
+                class="flex items-center gap-1.5 rounded-lg border border-transparent bg-slate-100/50 px-2.5 py-1.5 transition-all focus-within:border-indigo-200/50 focus-within:bg-white/80 hover:bg-white/50"
+              >
+                <FolderOpen size={14} class="text-slate-400" />
+                <input
+                  type="text"
+                  value={localFolder || ''}
+                  onchange={updateFolder}
+                  placeholder="No Folder"
+                  class="w-24 bg-transparent text-xs font-medium text-slate-600 outline-none placeholder:text-slate-400"
+                />
+              </div>
             </div>
-          </div>
+          {/if}
 
           <!-- Sync Status -->
           <div
@@ -494,57 +516,75 @@
 
         <div class="flex items-center gap-1">
           <!-- HISTORY CONTROLS -->
-          <button
-            onclick={performUndo}
-            disabled={!history.canUndo}
-            class="rounded-lg p-2 transition-all hover:bg-white/50
+          {#if !noteStore.selectedNote.is_deleted}
+            <button
+              onclick={performUndo}
+              disabled={!history.canUndo}
+              class="rounded-lg p-2 transition-all hover:bg-white/50
             {history.canUndo
-              ? 'cursor-pointer text-slate-600 hover:text-slate-900'
-              : 'cursor-not-allowed text-slate-300'}"
-            title="Undo (Ctrl+Z)"
-          >
-            <Undo2 size={18} />
-          </button>
+                ? 'cursor-pointer text-slate-600 hover:text-slate-900'
+                : 'cursor-not-allowed text-slate-300'}"
+              title="Undo (Ctrl+Z)"
+            >
+              <Undo2 size={18} />
+            </button>
 
-          <button
-            onclick={performRedo}
-            disabled={!history.canRedo}
-            class="rounded-lg p-2 transition-all hover:bg-white/50
+            <button
+              onclick={performRedo}
+              disabled={!history.canRedo}
+              class="rounded-lg p-2 transition-all hover:bg-white/50
             {history.canRedo
-              ? 'cursor-pointer text-slate-600 hover:text-slate-900'
-              : 'cursor-not-allowed text-slate-300'}"
-            title="Redo (Ctrl+Y)"
-          >
-            <Redo2 size={18} />
-          </button>
+                ? 'cursor-pointer text-slate-600 hover:text-slate-900'
+                : 'cursor-not-allowed text-slate-300'}"
+              title="Redo (Ctrl+Y)"
+            >
+              <Redo2 size={18} />
+            </button>
 
-          <div class="mx-1 h-4 w-px bg-slate-300/30"></div>
+            <div class="mx-1 h-4 w-px bg-slate-300/30"></div>
 
-          <!-- Copy to Clipboard -->
-          <button
-            onclick={copyToClipboard}
-            class="group flex items-center gap-1.5 rounded-lg px-2 py-1.5 text-xs font-medium text-slate-500 transition-all hover:bg-white/50 hover:text-slate-700"
-            title="Copy to Clipboard"
-          >
-            {#if isCopied}
-              <Check size={14} class="text-emerald-500" />
-              <span class="text-emerald-600">Copied</span>
-            {:else}
-              <Copy size={14} />
-              <span class="hidden sm:inline">Copy</span>
-            {/if}
-          </button>
+            <!-- Copy to Clipboard -->
+            <button
+              onclick={copyToClipboard}
+              class="group flex items-center gap-1.5 rounded-lg px-2 py-1.5 text-xs font-medium text-slate-500 transition-all hover:bg-white/50 hover:text-slate-700"
+              title="Copy to Clipboard"
+            >
+              {#if isCopied}
+                <Check size={14} class="text-emerald-500" />
+                <span class="text-emerald-600">Copied</span>
+              {:else}
+                <Copy size={14} />
+                <span class="hidden sm:inline">Copy</span>
+              {/if}
+            </button>
 
-          <div class="mx-1 h-4 w-px bg-slate-300/30"></div>
-
+            <div class="mx-1 h-4 w-px bg-slate-300/30"></div>
+          {:else}
+            <button
+              onclick={() =>
+                noteStore.selectedNote &&
+                noteStore.restore(noteStore.selectedNote.id)}
+              class="group flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-xs font-medium text-slate-500 transition-all hover:bg-white/50 hover:text-emerald-600"
+            >
+              <RotateCcw size={14} />
+              Restore
+            </button>
+          {/if}
+          <!-- Delete Button (Context Aware) -->
           <button
             onclick={() =>
               noteStore.selectedNote &&
               noteStore.delete(noteStore.selectedNote.id)}
             class="rounded-lg p-2 text-slate-400 transition-all hover:bg-red-50 hover:text-red-500"
-            title="Delete Note"
+            title={noteStore.selectedNote.is_deleted
+              ? 'Delete Permanently'
+              : 'Move to Trash'}
           >
-            <Trash2 size={18} />
+            {#if noteStore.selectedNote.is_deleted}
+              <Trash2 size={18} class="stroke-red-500" />
+            {:else}
+              <Trash2 size={18} />
+            {/if}
           </button>
         </div>
       </header>
@@ -559,8 +599,9 @@
           type="text"
           bind:this={titleRef}
           value={localTitle}
+          disabled={noteStore.selectedNote.is_deleted}
           oninput={(e) => handleInput(e, 'title')}
-          class="w-full bg-transparent px-8 pt-8 pb-4 text-3xl font-bold text-slate-800 outline-none placeholder:text-slate-300/70"
+          class="w-full bg-transparent px-8 pt-8 pb-4 text-3xl font-bold text-slate-800 outline-none placeholder:text-slate-300/70 disabled:cursor-not-allowed disabled:opacity-50"
           placeholder="Untitled Note"
         />
 
@@ -568,8 +609,9 @@
         <textarea
           bind:this={contentRef}
           value={localContent}
+          disabled={noteStore.selectedNote.is_deleted}
           oninput={(e) => handleInput(e, 'content')}
-          class="custom-scrollbar w-full flex-1 resize-none bg-transparent px-8 py-2 text-lg leading-relaxed text-slate-600 outline-none placeholder:text-slate-300/70"
+          class="custom-scrollbar w-full flex-1 resize-none bg-transparent px-8 py-2 text-lg leading-relaxed text-slate-600 outline-none placeholder:text-slate-300/70 disabled:cursor-not-allowed disabled:opacity-50"
           placeholder="Start typing your thoughts..."
           spellcheck="false"
         ></textarea>

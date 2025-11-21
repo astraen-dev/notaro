@@ -45,6 +45,12 @@ fn delete_note(state: State<AppState>, id: String) -> Result<(), String> {
 }
 
 #[tauri::command]
+fn restore_note(state: State<AppState>, id: String) -> Result<(), String> {
+    let db = state.db.lock().map_err(|_| "Failed to lock mutex")?;
+    db.restore_note(&id).map_err(|e| e.to_string())
+}
+
+#[tauri::command]
 fn get_settings(state: State<AppState>) -> Result<UserSettings, String> {
     let db = state.db.lock().map_err(|_| "Failed to lock mutex")?;
     db.get_settings().map_err(|e| e.to_string())
@@ -83,6 +89,7 @@ pub fn run() {
             create_note,
             update_note,
             delete_note,
+            restore_note,
             get_settings,
             save_settings
         ])
