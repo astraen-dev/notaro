@@ -1,9 +1,10 @@
 <script lang="ts">
   import { noteStore } from '$lib/noteStore.svelte';
   import { settingsStore } from '$lib/settingsStore.svelte';
+  import { HistoryStore, type HistoryState } from '$lib/historyStore.svelte';
   import SettingsModal from '../components/SettingsModal.svelte';
   import { fade } from 'svelte/transition';
-  import { onMount } from 'svelte';
+  import { onMount, tick } from 'svelte';
   import {
     Plus,
     Trash2,
@@ -18,6 +19,8 @@
     Copy,
     Check,
     Type,
+    Undo2,
+    Redo2,
   } from '@lucide/svelte';
   import '../app.css';
 
@@ -29,6 +32,15 @@
   let localTitle = $state('');
   let localContent = $state('');
   let currentNoteId = $state<string | null>(null);
+
+  // DOM References for Cursor Restoration
+  let titleRef = $state<HTMLInputElement>();
+  let contentRef = $state<HTMLTextAreaElement>();
+
+  // --- HISTORY STORE ---
+  const history = new HistoryStore();
+  let lastInputTime = 0;
+  const HISTORY_DEBOUNCE = 1000;
 
   // Initialize stores on mount
   onMount(() => {
@@ -47,6 +59,10 @@
         localTitle = '';
         localContent = '';
       }
+
+      // Reset History on note switch
+      history.clear();
+      lastInputTime = 0;
     }
   });
 
@@ -89,15 +105,110 @@
     }).format(date);
   };
 
-  // --- LIVE INPUT HANDLER ---
-  function handleInput(e: Event, field: 'title' | 'content') {
-    const val = (e.target as HTMLInputElement | HTMLTextAreaElement).value;
+  // --- HELPERS ---
+  function getCurrentCursorState(): {
+    field: 'title' | 'content';
+    pos: number;
+  } {
+    const field = document.activeElement === titleRef ? 'title' : 'content';
+    const pos =
+      (field === 'title'
+        ? titleRef?.selectionStart
+        : contentRef?.selectionStart) || 0;
+    return { field, pos };
+  }
 
-    // 1. Update Local State Immediately (Live Stats / UI)
+  async function applyHistoryState(state: HistoryState) {
+    // 1. Apply
+    localTitle = state.title;
+    localContent = state.content;
+
+    // 2. Persist
+    if (noteStore.selectedNote) {
+      noteStore.save(noteStore.selectedNote.id, localTitle, localContent);
+    }
+
+    // 3. Restore Focus
+    await tick();
+    if (state.cursorField === 'title' && titleRef) {
+      titleRef.focus();
+      const pos = Math.min(state.cursorPos, localTitle.length);
+      titleRef.setSelectionRange(pos, pos);
+    } else if (state.cursorField === 'content' && contentRef) {
+      contentRef.focus();
+      const pos = Math.min(state.cursorPos, localContent.length);
+      contentRef.setSelectionRange(pos, pos);
+    }
+  }
+
+  // --- ACTIONS ---
+  function performUndo() {
+    if (!history.canUndo) return;
+
+    const { field, pos } = getCurrentCursorState();
+    const currentState: HistoryState = {
+      title: localTitle,
+      content: localContent,
+      cursorField: field,
+      cursorPos: pos,
+    };
+
+    const prevState = history.undo(currentState);
+    if (prevState) applyHistoryState(prevState);
+  }
+
+  function performRedo() {
+    if (!history.canRedo) return;
+
+    const { field, pos } = getCurrentCursorState();
+    const currentState: HistoryState = {
+      title: localTitle,
+      content: localContent,
+      cursorField: field,
+      cursorPos: pos,
+    };
+
+    const nextState = history.redo(currentState);
+    if (nextState) applyHistoryState(nextState);
+  }
+
+  function handleKeydown(e: KeyboardEvent) {
+    if (e.metaKey || e.ctrlKey) {
+      if (e.key === 'z') {
+        e.preventDefault();
+        if (e.shiftKey) {
+          performRedo();
+        } else {
+          performUndo();
+        }
+      } else if (e.key === 'y') {
+        e.preventDefault();
+        performRedo();
+      }
+    }
+  }
+
+  function handleInput(e: Event, field: 'title' | 'content') {
+    const target = e.target as HTMLInputElement | HTMLTextAreaElement;
+    const val = target.value;
+    const now = Date.now();
+
+    // 1. Snapshot logic moved to component controller, storage in Store
+    if (now - lastInputTime > HISTORY_DEBOUNCE) {
+      history.snapshot({
+        title: localTitle, // capture OLD state
+        content: localContent,
+        cursorField: field,
+        cursorPos: field === 'title' ? localTitle.length : localContent.length,
+      });
+    }
+    lastInputTime = now;
+
+    // 2. Update Local
     if (field === 'title') localTitle = val;
     if (field === 'content') localContent = val;
 
-    // 2. Debounce Store Update (Persistence)
+    // 3. Persist
     if (!noteStore.selectedNote) return;
     const id = noteStore.selectedNote.id;
 
@@ -133,6 +244,8 @@
   );
   let charCount = $derived(localContent.length || 0);
 </script>
+
+<svelte:window onkeydown={handleKeydown} />
 
 <SettingsModal />
 
@@ -276,6 +389,33 @@
         </div>
 
         <div class="flex items-center gap-1">
+          <!-- HISTORY CONTROLS -->
+          <button
+            onclick={performUndo}
+            disabled={!history.canUndo}
+            class="rounded-lg p-2 transition-all hover:bg-white/50
+            {history.canUndo
+              ? 'cursor-pointer text-slate-600 hover:text-slate-900'
+              : 'cursor-not-allowed text-slate-300'}"
+            title="Undo (Ctrl+Z)"
+          >
+            <Undo2 size={18} />
+          </button>
+
+          <button
+            onclick={performRedo}
+            disabled={!history.canRedo}
+            class="rounded-lg p-2 transition-all hover:bg-white/50
+            {history.canRedo
+              ? 'cursor-pointer text-slate-600 hover:text-slate-900'
+              : 'cursor-not-allowed text-slate-300'}"
+            title="Redo (Ctrl+Y)"
+          >
+            <Redo2 size={18} />
+          </button>
+
+          <div class="mx-1 h-4 w-px bg-slate-300/30"></div>
+
           <!-- Copy to Clipboard -->
           <button
             onclick={copyToClipboard}
@@ -313,6 +453,7 @@
         <!-- Title -->
         <input
           type="text"
+          bind:this={titleRef}
           value={localTitle}
           oninput={(e) => handleInput(e, 'title')}
           class="w-full bg-transparent px-8 pt-8 pb-4 text-3xl font-bold text-slate-800 outline-none placeholder:text-slate-300/70"
@@ -321,6 +462,8 @@
 
         <!-- Content -->
         <textarea
+          bind:this={contentRef}
+          value={localContent}
           oninput={(e) => handleInput(e, 'content')}
           class="custom-scrollbar w-full flex-1 resize-none bg-transparent px-8 py-2 text-lg leading-relaxed text-slate-600 outline-none placeholder:text-slate-300/70"
           placeholder="Start typing your thoughts..."
