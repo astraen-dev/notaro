@@ -4,7 +4,7 @@
   import { HistoryStore, type HistoryState } from '$lib/historyStore.svelte';
   import SettingsModal from '../components/SettingsModal.svelte';
   import { fade, slide } from 'svelte/transition';
-  import { onMount, tick } from 'svelte';
+  import { onMount, tick, onDestroy } from 'svelte';
   import {
     Plus,
     Trash2,
@@ -32,11 +32,15 @@
   import '../app.css';
 
   let timer: ReturnType<typeof setTimeout>;
+
   let isSidebarOpen = $state(true);
   let isCopied = $state(false);
   let isMobileMenuOpen = $state(false);
 
-  // --- LOCAL EDITOR STATE ---
+  let editorSectionRef = $state<HTMLElement>();
+  let editorWidth = $state(1000);
+  let resizeObserver: ResizeObserver;
+
   let localTitle = $state('');
   let localContent = $state('');
   let localFolder = $state<string | null>(null);
@@ -44,22 +48,43 @@
 
   let currentNoteId = $state<string | null>(null);
 
-  // DOM References for Cursor Restoration
   let titleRef = $state<HTMLInputElement>();
   let contentRef = $state<HTMLTextAreaElement>();
 
-  // --- HISTORY STORE ---
   const history = new HistoryStore();
   let lastInputTime = 0;
   const HISTORY_DEBOUNCE = 1000;
 
-  // Initialize stores on mount
+  // UI Constants for Dynamic Calculation
+  const UI_METRICS = {
+    PADDING: 32, // px-4 * 2
+    GAP_L: 16, // gap-4
+    GAP_S: 4, // gap-1 / gap-2
+    BTN: 40, // Standard button touch target
+    FOLDER: 140, // Folder input width + icon
+    COPY: 70, // Copy button with text
+    RESTORE: 90, // Restore button with text
+    MENU: 40, // Hamburger menu
+  };
+
   onMount(() => {
     void noteStore.init();
     void settingsStore.init();
+
+    if (editorSectionRef) {
+      resizeObserver = new ResizeObserver((entries) => {
+        for (const entry of entries) {
+          editorWidth = entry.contentRect.width;
+        }
+      });
+      resizeObserver.observe(editorSectionRef);
+    }
   });
 
-  // --- SYNC LOCAL STATE WITH STORE SELECTION ---
+  onDestroy(() => {
+    if (resizeObserver) resizeObserver.disconnect();
+  });
+
   $effect(() => {
     if (noteStore.selectedId !== currentNoteId) {
       currentNoteId = noteStore.selectedId;
@@ -75,7 +100,6 @@
         localPinned = false;
       }
 
-      // Reset History on note switch
       history.clear();
       lastInputTime = 0;
       isMobileMenuOpen = false;
@@ -86,7 +110,6 @@
     const root = document.documentElement;
     const s = settingsStore.settings;
 
-    // 1. Apply Font
     const fonts = {
       sans: '"Inter", sans-serif',
       serif: '"Merriweather", serif',
@@ -94,11 +117,8 @@
     };
     root.style.setProperty('--font-main', fonts[s.font_family] || fonts.sans);
     root.style.setProperty('--font-size-base', `${s.font_size}px`);
-
-    // 2. Apply Accent Hue (HSL)
     root.style.setProperty('--accent-hue', s.accent_hue.toString());
 
-    // 3. Apply Theme
     const isDark =
       s.theme_mode === 'dark' ||
       (s.theme_mode === 'system' &&
@@ -111,7 +131,6 @@
     }
   });
 
-  // Date formatter for the list
   const formatDate = (iso: string) => {
     const date = new Date(iso);
     return new Intl.DateTimeFormat('en-US', {
@@ -120,7 +139,6 @@
     }).format(date);
   };
 
-  // --- HELPERS ---
   function getCurrentCursorState(): {
     field: 'title' | 'content';
     pos: number;
@@ -134,14 +152,9 @@
   }
 
   async function applyHistoryState(state: HistoryState) {
-    // 1. Apply
     localTitle = state.title;
     localContent = state.content;
-
-    // 2. Persist
     saveProperties();
-
-    // 3. Restore Focus
     await tick();
     if (state.cursorField === 'title' && titleRef) {
       titleRef.focus();
@@ -165,7 +178,6 @@
     );
   }
 
-  // --- ACTIONS ---
   function togglePin() {
     localPinned = !localPinned;
     saveProperties();
@@ -228,10 +240,9 @@
     const val = target.value;
     const now = Date.now();
 
-    // History Snapshot
     if (now - lastInputTime > HISTORY_DEBOUNCE) {
       history.snapshot({
-        title: localTitle, // capture OLD state
+        title: localTitle,
         content: localContent,
         cursorField: field,
         cursorPos: field === 'title' ? localTitle.length : localContent.length,
@@ -239,11 +250,9 @@
     }
     lastInputTime = now;
 
-    // Update Local
     if (field === 'title') localTitle = val;
     if (field === 'content') localContent = val;
 
-    // Debounced Save
     clearTimeout(timer);
     timer = setTimeout(() => {
       saveProperties();
@@ -254,9 +263,15 @@
     isSidebarOpen = !isSidebarOpen;
   }
 
+  function selectNote(id: string) {
+    noteStore.select(id);
+    if (window.innerWidth < 768) {
+      isSidebarOpen = false;
+    }
+  }
+
   async function copyToClipboard() {
     try {
-      // Copy from local state to ensure we get the latest characters typed
       await navigator.clipboard.writeText(localContent);
       isCopied = true;
       setTimeout(() => (isCopied = false), 2000);
@@ -265,8 +280,6 @@
     }
   }
 
-  // --- REACTIVE STATS ---
-  // Derived from localContent for 0ms latency
   let wordCount = $derived(
     localContent
       .trim()
@@ -274,6 +287,27 @@
       .filter((w) => w.length > 0).length || 0
   );
   let charCount = $derived(localContent.length || 0);
+
+  let isCompactToolbar = $derived.by(() => {
+    if (!noteStore.selectedNote) return false;
+
+    const isDeleted = noteStore.selectedNote.is_deleted;
+
+    let requiredWidth = UI_METRICS.PADDING + UI_METRICS.BTN + UI_METRICS.GAP_L; // Toggle btn + padding
+
+    if (isDeleted) {
+      // Trash mode: Restore btn + Delete btn
+      requiredWidth += UI_METRICS.RESTORE + UI_METRICS.GAP_S + UI_METRICS.BTN;
+    } else {
+      // Active mode: Pin + Folder + (Gap) + Undo + Redo + Copy + Delete
+      const leftGroup = UI_METRICS.BTN + UI_METRICS.GAP_S + UI_METRICS.FOLDER;
+      const rightGroup =
+        UI_METRICS.BTN * 3 + UI_METRICS.COPY + UI_METRICS.GAP_S * 4;
+      requiredWidth += leftGroup + UI_METRICS.GAP_L + rightGroup;
+    }
+
+    return editorWidth < requiredWidth;
+  });
 </script>
 
 <svelte:window onkeydown={handleKeydown} />
@@ -283,14 +317,22 @@
 <main
   class="flex h-screen w-screen overflow-hidden bg-gradient-to-br from-transparent to-black/5 p-3 text-slate-700 selection:bg-indigo-100 selection:text-indigo-900"
 >
-  <!-- GLASS SIDEBAR -->
+  {#if isSidebarOpen}
+    <div
+      class="fixed inset-0 z-30 bg-black/20 backdrop-blur-[2px] md:hidden"
+      onclick={() => (isSidebarOpen = false)}
+      transition:fade={{ duration: 200 }}
+      role="presentation"
+    ></div>
+  {/if}
+
   <aside
-    class="flex flex-col overflow-hidden rounded-2xl border border-white/50 bg-white/40 shadow-xl backdrop-blur-xl transition-all duration-300 ease-[cubic-bezier(0.2,0,0,1)]
+    class="fixed inset-y-3 left-3 z-40 flex h-[calc(100vh-1.5rem)] flex-col overflow-hidden rounded-2xl border border-white/50 bg-white/90 shadow-2xl backdrop-blur-xl transition-all duration-300 ease-[cubic-bezier(0.2,0,0,1)] md:relative md:inset-auto
+    md:h-auto md:bg-white/40 md:shadow-xl
     {isSidebarOpen
-      ? 'mr-3 w-72 translate-x-0 opacity-100'
-      : 'w-0 -translate-x-4 border-0 opacity-0'}"
+      ? 'w-72 translate-x-0 opacity-100 md:mr-3'
+      : 'w-0 -translate-x-4 border-0 opacity-0 md:mr-0'}"
   >
-    <!-- Sidebar Header -->
     <div
       data-tauri-drag-region
       class="flex items-center justify-between p-4 pb-2 select-none"
@@ -319,7 +361,6 @@
       </div>
     </div>
 
-    <!-- Navigation Tabs -->
     <div class="flex gap-1 px-4 pb-2">
       <button
         onclick={() => noteStore.selectFolder('all')}
@@ -353,7 +394,6 @@
       </button>
     </div>
 
-    <!-- Folder List -->
     {#if noteStore.availableFolders.length > 0}
       <div class="mb-1 px-4 py-1">
         <div
@@ -378,7 +418,6 @@
       </div>
     {/if}
 
-    <!-- Search Bar -->
     <div class="px-4 py-2">
       <div class="group relative">
         <Search
@@ -394,11 +433,10 @@
       </div>
     </div>
 
-    <!-- Note List -->
     <div class="custom-scrollbar flex-1 space-y-1 overflow-y-auto p-2">
       {#each noteStore.filteredNotes as note (note.id)}
         <button
-          onclick={() => noteStore.select(note.id)}
+          onclick={() => selectNote(note.id)}
           class="group relative w-full overflow-hidden rounded-xl border border-transparent p-3 text-left transition-all duration-200
           {noteStore.selectedId === note.id
             ? 'border-white/60 bg-white/80 shadow-sm'
@@ -441,12 +479,11 @@
     </div>
   </aside>
 
-  <!-- MAIN EDITOR -->
   <section
-    class="relative flex flex-1 flex-col overflow-hidden rounded-2xl border border-white/60 bg-white/60 shadow-2xl backdrop-blur-2xl transition-all duration-300"
+    bind:this={editorSectionRef}
+    class="relative flex w-full flex-1 flex-col overflow-hidden rounded-2xl border border-white/60 bg-white/60 shadow-2xl backdrop-blur-2xl transition-all duration-300"
   >
     {#if noteStore.selectedNote}
-      <!-- Trash Banner -->
       {#if noteStore.selectedNote.is_deleted}
         <div
           class="flex w-full items-center justify-center gap-2 bg-red-50/80 px-4 py-2 text-xs font-medium text-red-600 dark:bg-red-900/20 dark:text-red-400"
@@ -456,14 +493,11 @@
         </div>
       {/if}
 
-      <!-- Toolbar / Header -->
       <header
         data-tauri-drag-region
         class="flex h-14 min-h-[3.5rem] items-center justify-between gap-4 border-b border-slate-200/30 bg-white/10 px-4"
       >
-        <!-- LEFT SIDE: Sidebar Toggle + Standard Tools -->
         <div class="flex items-center gap-4">
-          <!-- Sidebar Toggle Button -->
           <button
             onclick={toggleSidebar}
             class="rounded-lg p-2 text-slate-400 transition-all hover:bg-white/50 hover:text-slate-600 {isSidebarOpen
@@ -475,142 +509,139 @@
           </button>
 
           {#if !noteStore.selectedNote.is_deleted}
-            <!-- DESKTOP: Folder/Pin (Hidden on Mobile) -->
-            <div class="hidden items-center gap-2 md:flex">
-              <button
-                onclick={togglePin}
-                class="rounded-lg p-1.5 transition-all hover:bg-white/50 active:scale-90
-                    {localPinned
-                  ? 'text-indigo-500'
-                  : 'text-slate-400 hover:text-slate-600'}"
-                title={localPinned ? 'Unpin Note' : 'Pin Note'}
-              >
-                <Pin size={16} class={localPinned ? 'fill-current' : ''} />
-              </button>
+            {#if !isCompactToolbar}
+              <div class="flex items-center gap-2">
+                <button
+                  onclick={togglePin}
+                  class="rounded-lg p-1.5 transition-all hover:bg-white/50 active:scale-90
+                      {localPinned
+                    ? 'text-indigo-500'
+                    : 'text-slate-400 hover:text-slate-600'}"
+                  title={localPinned ? 'Unpin Note' : 'Pin Note'}
+                >
+                  <Pin size={16} class={localPinned ? 'fill-current' : ''} />
+                </button>
 
-              <div
-                class="flex items-center gap-1.5 rounded-lg border border-transparent bg-slate-100/50 px-2.5 py-1.5 transition-all focus-within:border-indigo-200/50 focus-within:bg-white/80 hover:bg-white/50"
-              >
-                <FolderOpen size={14} class="text-slate-400" />
-                <input
-                  type="text"
-                  value={localFolder || ''}
-                  onchange={updateFolder}
-                  placeholder="No Folder"
-                  class="w-24 bg-transparent text-xs font-medium text-slate-600 outline-none placeholder:text-slate-400"
-                />
+                <div
+                  class="flex items-center gap-1.5 rounded-lg border border-transparent bg-slate-100/50 px-2.5 py-1.5 transition-all focus-within:border-indigo-200/50 focus-within:bg-white/80 hover:bg-white/50"
+                >
+                  <FolderOpen size={14} class="text-slate-400" />
+                  <input
+                    type="text"
+                    value={localFolder || ''}
+                    onchange={updateFolder}
+                    placeholder="No Folder"
+                    class="w-24 bg-transparent text-xs font-medium text-slate-600 outline-none placeholder:text-slate-400"
+                  />
+                </div>
               </div>
-            </div>
+            {/if}
           {/if}
         </div>
 
-        <!-- RIGHT SIDE -->
-        <!-- DESKTOP: Full Action Bar -->
-        <div class="hidden items-center gap-1 md:flex">
-          {#if !noteStore.selectedNote.is_deleted}
-            <button
-              onclick={performUndo}
-              disabled={!history.canUndo}
-              class="rounded-lg p-2 transition-all hover:bg-white/50
-            {history.canUndo
-                ? 'cursor-pointer text-slate-600 hover:text-slate-900'
-                : 'cursor-not-allowed text-slate-300'}"
-              title="Undo (Ctrl+Z)"
-            >
-              <Undo2 size={18} />
-            </button>
+        {#if !isCompactToolbar}
+          <div class="flex items-center gap-1">
+            {#if !noteStore.selectedNote.is_deleted}
+              <button
+                onclick={performUndo}
+                disabled={!history.canUndo}
+                class="rounded-lg p-2 transition-all hover:bg-white/50
+              {history.canUndo
+                  ? 'cursor-pointer text-slate-600 hover:text-slate-900'
+                  : 'cursor-not-allowed text-slate-300'}"
+                title="Undo (Ctrl+Z)"
+              >
+                <Undo2 size={18} />
+              </button>
 
-            <button
-              onclick={performRedo}
-              disabled={!history.canRedo}
-              class="rounded-lg p-2 transition-all hover:bg-white/50
-            {history.canRedo
-                ? 'cursor-pointer text-slate-600 hover:text-slate-900'
-                : 'cursor-not-allowed text-slate-300'}"
-              title="Redo (Ctrl+Y)"
-            >
-              <Redo2 size={18} />
-            </button>
+              <button
+                onclick={performRedo}
+                disabled={!history.canRedo}
+                class="rounded-lg p-2 transition-all hover:bg-white/50
+              {history.canRedo
+                  ? 'cursor-pointer text-slate-600 hover:text-slate-900'
+                  : 'cursor-not-allowed text-slate-300'}"
+                title="Redo (Ctrl+Y)"
+              >
+                <Redo2 size={18} />
+              </button>
 
-            <div class="mx-1 h-4 w-px bg-slate-300/30"></div>
+              <div class="mx-1 h-4 w-px bg-slate-300/30"></div>
 
-            <!-- Copy to Clipboard -->
-            <button
-              onclick={copyToClipboard}
-              class="group flex items-center gap-1.5 rounded-lg px-2 py-1.5 text-xs font-medium text-slate-500 transition-all hover:bg-white/50 hover:text-slate-700"
-              title="Copy to Clipboard"
-            >
-              {#if isCopied}
-                <Check size={14} class="text-emerald-500" />
-                <span class="text-emerald-600">Copied</span>
-              {:else}
-                <Copy size={14} />
-                <span class="hidden sm:inline">Copy</span>
-              {/if}
-            </button>
+              <button
+                onclick={copyToClipboard}
+                class="group flex items-center gap-1.5 rounded-lg px-2 py-1.5 text-xs font-medium text-slate-500 transition-all hover:bg-white/50 hover:text-slate-700"
+                title="Copy to Clipboard"
+              >
+                {#if isCopied}
+                  <Check size={14} class="text-emerald-500" />
+                  <span class="text-emerald-600">Copied</span>
+                {:else}
+                  <Copy size={14} />
+                  <span class="hidden sm:inline">Copy</span>
+                {/if}
+              </button>
 
-            <div class="mx-1 h-4 w-px bg-slate-300/30"></div>
-          {:else}
+              <div class="mx-1 h-4 w-px bg-slate-300/30"></div>
+            {:else}
+              <button
+                onclick={() =>
+                  noteStore.selectedNote &&
+                  noteStore.restore(noteStore.selectedNote.id)}
+                class="group flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-xs font-medium text-slate-500 transition-all hover:bg-white/50 hover:text-emerald-600"
+              >
+                <RotateCcw size={14} />
+                <span class="hidden sm:inline">Restore</span>
+              </button>
+            {/if}
+
             <button
               onclick={() =>
                 noteStore.selectedNote &&
-                noteStore.restore(noteStore.selectedNote.id)}
-              class="group flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-xs font-medium text-slate-500 transition-all hover:bg-white/50 hover:text-emerald-600"
+                noteStore.delete(noteStore.selectedNote.id)}
+              class="rounded-lg p-2 text-slate-400 transition-all hover:bg-red-50 hover:text-red-500"
+              title={noteStore.selectedNote.is_deleted
+                ? 'Delete Permanently'
+                : 'Move to Trash'}
             >
-              <RotateCcw size={14} />
-              <span class="hidden sm:inline">Restore</span>
+              {#if noteStore.selectedNote.is_deleted}
+                <Trash2 size={18} class="stroke-red-500" />
+              {:else}
+                <Trash2 size={18} />
+              {/if}
             </button>
-          {/if}
+          </div>
+        {/if}
 
-          <button
-            onclick={() =>
-              noteStore.selectedNote &&
-              noteStore.delete(noteStore.selectedNote.id)}
-            class="rounded-lg p-2 text-slate-400 transition-all hover:bg-red-50 hover:text-red-500"
-            title={noteStore.selectedNote.is_deleted
-              ? 'Delete Permanently'
-              : 'Move to Trash'}
-          >
-            {#if noteStore.selectedNote.is_deleted}
-              <Trash2 size={18} class="stroke-red-500" />
-            {:else}
-              <Trash2 size={18} />
-            {/if}
-          </button>
-        </div>
+        {#if isCompactToolbar}
+          <div class="flex items-center">
+            <button
+              onclick={() => (isMobileMenuOpen = !isMobileMenuOpen)}
+              class="rounded-lg p-2 text-slate-500 transition-all hover:bg-white/50 hover:text-indigo-600"
+            >
+              {#if isMobileMenuOpen}
+                <X size={20} />
+              {:else}
+                <MoreVertical size={20} />
+              {/if}
+            </button>
+          </div>
+        {/if}
 
-        <!-- MOBILE: Menu Trigger -->
-        <div class="flex items-center md:hidden">
-          <button
-            onclick={() => (isMobileMenuOpen = !isMobileMenuOpen)}
-            class="rounded-lg p-2 text-slate-500 transition-all hover:bg-white/50 hover:text-indigo-600"
-          >
-            {#if isMobileMenuOpen}
-              <X size={20} />
-            {:else}
-              <MoreVertical size={20} />
-            {/if}
-          </button>
-        </div>
-
-        <!-- MOBILE: Dropdown Menu -->
         {#if isMobileMenuOpen}
-          <!-- Backdrop -->
           <div
             role="button"
             tabindex="0"
-            class="fixed inset-0 z-40 bg-black/5 backdrop-blur-[1px] md:hidden"
+            class="fixed inset-0 z-40 bg-black/5 backdrop-blur-[1px]"
             onclick={() => (isMobileMenuOpen = false)}
             onkeydown={(e) => e.key === 'Escape' && (isMobileMenuOpen = false)}
           ></div>
 
-          <!-- Menu Content -->
           <div
-            class="absolute top-16 right-2 z-50 flex w-64 flex-col gap-2 rounded-xl border border-white/60 bg-white/90 p-3 shadow-2xl backdrop-blur-xl md:hidden dark:border-slate-700 dark:bg-slate-900/95"
+            class="absolute top-16 right-2 z-50 flex w-64 flex-col gap-2 rounded-xl border border-white/60 bg-white/90 p-3 shadow-2xl backdrop-blur-xl dark:border-slate-700 dark:bg-slate-900/95"
             transition:slide={{ duration: 150 }}
           >
             {#if !noteStore.selectedNote.is_deleted}
-              <!-- Mobile Folder/Pin Row -->
               <div
                 class="flex items-center gap-2 border-b border-slate-200/50 pb-2"
               >
@@ -637,7 +668,6 @@
                 </div>
               </div>
 
-              <!-- Mobile Actions Row -->
               <div class="flex justify-between pt-1">
                 <div class="flex gap-1">
                   <button
@@ -677,7 +707,6 @@
                 </div>
               </div>
             {:else}
-              <!-- Trash Mobile View -->
               <div class="flex flex-col gap-2">
                 <button
                   onclick={() =>
@@ -703,12 +732,10 @@
         {/if}
       </header>
 
-      <!-- Input Area - Bounded to LOCAL state variables -->
       <div
         class="mx-auto flex w-full max-w-3xl flex-1 flex-col overflow-hidden"
         in:fade={{ duration: 150 }}
       >
-        <!-- Title -->
         <input
           type="text"
           bind:this={titleRef}
@@ -719,7 +746,6 @@
           placeholder="Untitled Note"
         />
 
-        <!-- Content -->
         <textarea
           bind:this={contentRef}
           value={localContent}
@@ -731,7 +757,6 @@
         ></textarea>
       </div>
 
-      <!-- Status Bar - Uses derived stats from LOCAL state -->
       <footer
         class="flex items-center justify-between border-t border-slate-200/30 bg-white/10 px-6 py-2 text-[10px] font-medium tracking-wider text-slate-400 uppercase select-none"
       >
@@ -762,7 +787,21 @@
         </div>
       </footer>
     {:else}
-      <!-- Empty State -->
+      <header
+        data-tauri-drag-region
+        class="flex h-14 min-h-[3.5rem] items-center px-4"
+      >
+        <button
+          onclick={toggleSidebar}
+          class="rounded-lg p-2 text-slate-400 transition-all hover:bg-white/50 hover:text-slate-600 {isSidebarOpen
+            ? 'opacity-50'
+            : 'text-indigo-500 opacity-100'}"
+          title={isSidebarOpen ? 'Collapse Sidebar' : 'Expand Sidebar'}
+        >
+          <PanelLeft size={18} />
+        </button>
+      </header>
+
       <div
         class="flex flex-1 flex-col items-center justify-center space-y-4 text-slate-400"
       >
