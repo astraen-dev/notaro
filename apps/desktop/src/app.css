@@ -1,0 +1,116 @@
+@import 'tailwindcss';
+
+:root {
+  --accent-hue: 250;
+  --font-main: 'Inter', sans-serif;
+  --font-size-base: 14px;
+
+  font-family:
+    'Inter',
+    -apple-system,
+    BlinkMacSystemFont,
+    'Segoe UI',
+    Roboto,
+    Oxygen,
+    Ubuntu,
+    Cantarell,
+    'Open Sans',
+    'Helvetica Neue',
+    sans-serif;
+}
+
+body {
+  font-family: var(--font-main);
+  font-size: var(--font-size-base);
+
+  /* Sophisticated mesh gradient for glassmorphism depth */
+  background-color: #f3f4f6;
+  background-image:
+    radial-gradient(
+      at 0% 0%,
+      hsla(var(--accent-hue), 90%, 75%, 0.3) 0px,
+      transparent 50%
+    ),
+    radial-gradient(at 100% 0%, rgba(125, 211, 252, 0.3) 0px, transparent 50%),
+    radial-gradient(
+      at 100% 100%,
+      hsla(var(--accent-hue), 80%, 60%, 0.2) 0px,
+      transparent 50%
+    ),
+    radial-gradient(at 0% 100%, rgba(192, 132, 252, 0.3) 0px, transparent 50%);
+
+  transition: background-image 0.5s ease;
+  background-attachment: fixed;
+  background-size: cover;
+
+  height: 100vh;
+  width: 100vw;
+  overflow: hidden;
+  color: #1f2937;
+  -webkit-font-smoothing: antialiased;
+}
+
+:global(.dark) body {
+  background-color: #0f172a;
+  color: #e2e8f0;
+  background-image:
+    radial-gradient(
+      at 0% 0%,
+      hsla(var(--accent-hue), 70%, 40%, 0.2) 0px,
+      transparent 50%
+    ),
+    radial-gradient(
+      at 100% 100%,
+      hsla(var(--accent-hue), 60%, 30%, 0.15) 0px,
+      transparent 50%
+    );
+}
+
+/* Invisible but functional scrollbars for minimalist look */
+::-webkit-scrollbar {
+  width: 6px;
+}
+
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  background: rgba(0, 0, 0, 0.05);
+  border-radius: 10px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: rgba(0, 0, 0, 0.15);
+}
+
+/* Custom Range Slider Styling */
+input[type='range'] {
+  -webkit-appearance: none; /* Hides default slider */
+  width: 100%;
+  background: transparent;
+  cursor: pointer;
+}
+
+input[type='range']::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  height: 22px;
+  width: 22px;
+  border-radius: 50%;
+  /* Dynamic color linked to the store */
+  background-color: hsl(var(--accent-hue), 80%, 60%);
+  border: 3px solid white;
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
+  margin-top: 0px;
+  transition: transform 0.1s ease;
+}
+
+/* Hover Effect */
+input[type='range']::-webkit-slider-thumb:hover {
+  transform: scale(1.15);
+}
+
+/* Active/Click Effect */
+input[type='range']::-webkit-slider-thumb:active {
+  transform: scale(0.95);
+}

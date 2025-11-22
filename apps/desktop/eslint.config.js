@@ -33,6 +33,12 @@ export default [
     },
   },
   {
+    files: ['**/*.svelte.ts'],
+    languageOptions: {
+      parser: ts.parser,
+    },
+  },
+  {
     ignores: ['build/', '.svelte-kit/', 'src-tauri/gen/'],
   },
 ];
