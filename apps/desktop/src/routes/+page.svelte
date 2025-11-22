@@ -8,6 +8,7 @@
   import '../app.css';
 
   let isSidebarOpen = $state(true);
+  let sidebarRef = $state<Sidebar>();
 
   onMount(() => {
     void noteStore.init();
@@ -40,13 +41,33 @@
       root.classList.remove('dark');
     }
   });
+
+  function handleGlobalKeydown(e: KeyboardEvent) {
+    if (e.metaKey || e.ctrlKey) {
+      if (e.key === 'n') {
+        e.preventDefault();
+        noteStore.add();
+      }
+      if (e.key === 'f') {
+        e.preventDefault();
+        if (!isSidebarOpen) isSidebarOpen = true;
+        sidebarRef?.focusSearch();
+      }
+      if (e.key === ',') {
+        e.preventDefault();
+        settingsStore.toggle();
+      }
+    }
+  }
 </script>
+
+<svelte:window onkeydown={handleGlobalKeydown} />
 
 <SettingsModal />
 
 <main
   class="flex h-screen w-screen overflow-hidden bg-gradient-to-br from-transparent to-black/5 p-3 text-slate-700 selection:bg-indigo-100 selection:text-indigo-900"
 >
-  <Sidebar bind:isOpen={isSidebarOpen} />
+  <Sidebar bind:this={sidebarRef} bind:isOpen={isSidebarOpen} />
   <Editor bind:isSidebarOpen />
 </main>

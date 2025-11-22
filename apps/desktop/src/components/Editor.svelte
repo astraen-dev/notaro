@@ -20,6 +20,8 @@
     Loader2,
     CheckCircle2,
     PenLine,
+    Scan,
+    Shrink,
   } from '@lucide/svelte';
 
   // Props
@@ -28,6 +30,7 @@
   // Local State
   let isCopied = $state(false);
   let isMobileMenuOpen = $state(false);
+  let isZenMode = $state(false);
   let editorSectionRef = $state<HTMLElement>();
   let editorWidth = $state(1000);
   let resizeObserver: ResizeObserver;
@@ -70,6 +73,8 @@
       });
       resizeObserver.observe(editorSectionRef);
     }
+    // Initial resize for content
+    resizeTextarea();
   });
 
   onDestroy(() => {
@@ -95,8 +100,16 @@
       history.clear();
       lastInputTime = 0;
       isMobileMenuOpen = false;
+      resizeTextarea();
     }
   });
+
+  function resizeTextarea() {
+    if (contentRef) {
+      contentRef.style.height = 'auto';
+      contentRef.style.height = contentRef.scrollHeight + 'px';
+    }
+  }
 
   // --- History Logic ---
 
@@ -114,6 +127,7 @@
     localContent = state.content;
     saveProperties();
     await tick();
+    resizeTextarea();
     if (state.cursorField === 'title' && titleRef) {
       titleRef.focus();
       const pos = Math.min(state.cursorPos, localTitle.length);
@@ -196,6 +210,8 @@
     const val = target.value;
     const now = Date.now();
 
+    if (field === 'content') resizeTextarea();
+
     if (now - lastInputTime > HISTORY_DEBOUNCE) {
       history.snapshot({
         title: localTitle,
@@ -221,6 +237,12 @@
     } catch (err) {
       console.error('Failed to copy:', err);
     }
+  }
+
+  function toggleZenMode() {
+    isZenMode = !isZenMode;
+    // Auto-collapse sidebar in Zen Mode, restore if exiting
+    if (isZenMode) isSidebarOpen = false;
   }
 
   // --- Derived UI ---
@@ -269,7 +291,8 @@
     <!-- Toolbar Header -->
     <header
       data-tauri-drag-region
-      class="flex h-14 min-h-[3.5rem] items-center justify-between gap-4 border-b border-slate-200/30 bg-white/10 px-4"
+      class="flex min-h-[3.5rem] items-center justify-between gap-4 border-b border-slate-200/30 bg-white/10 px-4 transition-opacity duration-500
+      {isZenMode ? 'opacity-0 hover:opacity-100' : 'opacity-100'}"
     >
       <div class="flex items-center gap-4">
         <button
@@ -312,8 +335,8 @@
       </div>
 
       <!-- Desktop Actions -->
-      {#if !isCompactToolbar}
-        <div class="flex items-center gap-1">
+      <div class="flex items-center gap-1">
+        {#if !isCompactToolbar}
           {#if !noteStore.selectedNote.is_deleted}
             <button
               onclick={performUndo}
@@ -383,24 +406,38 @@
               <Trash2 size={18} />
             {/if}
           </button>
-        </div>
-      {/if}
+        {/if}
 
-      <!-- Mobile/Compact Menu Trigger -->
-      {#if isCompactToolbar}
-        <div class="flex items-center">
-          <button
-            onclick={() => (isMobileMenuOpen = !isMobileMenuOpen)}
-            class="rounded-lg p-2 text-slate-500 transition-all hover:bg-white/50 hover:text-indigo-600"
-          >
-            {#if isMobileMenuOpen}
-              <X size={20} />
-            {:else}
-              <MoreVertical size={20} />
-            {/if}
-          </button>
-        </div>
-      {/if}
+        <!-- Zen Mode Toggle -->
+        <div class="mx-1 h-4 w-px bg-slate-300/30"></div>
+        <button
+          onclick={toggleZenMode}
+          class="rounded-lg p-2 text-slate-400 transition-all hover:bg-indigo-50 hover:text-indigo-500"
+          title={isZenMode ? 'Exit Zen Mode' : 'Enter Zen Mode'}
+        >
+          {#if isZenMode}
+            <Shrink size={18} />
+          {:else}
+            <Scan size={18} />
+          {/if}
+        </button>
+
+        <!-- Mobile/Compact Menu Trigger -->
+        {#if isCompactToolbar}
+          <div class="flex items-center">
+            <button
+              onclick={() => (isMobileMenuOpen = !isMobileMenuOpen)}
+              class="rounded-lg p-2 text-slate-500 transition-all hover:bg-white/50 hover:text-indigo-600"
+            >
+              {#if isMobileMenuOpen}
+                <X size={20} />
+              {:else}
+                <MoreVertical size={20} />
+              {/if}
+            </button>
+          </div>
+        {/if}
+      </div>
 
       <!-- Compact Menu Dropdown -->
       {#if isMobileMenuOpen}
@@ -509,33 +546,40 @@
 
     <!-- Editor Input Areas -->
     <div
-      class="mx-auto flex w-full max-w-3xl flex-1 flex-col overflow-hidden"
+      class="custom-scrollbar flex-1 overflow-y-auto scroll-smooth"
       in:fade={{ duration: 150 }}
     >
-      <input
-        type="text"
-        bind:this={titleRef}
-        value={localTitle}
-        disabled={noteStore.selectedNote.is_deleted}
-        oninput={(e) => handleInput(e, 'title')}
-        class="w-full bg-transparent px-8 pt-8 pb-4 text-3xl font-bold text-slate-800 outline-none placeholder:text-slate-300/70 disabled:cursor-not-allowed disabled:opacity-50"
-        placeholder="Untitled Note"
-      />
+      <div class="mx-auto flex min-h-full w-full max-w-3xl flex-col px-8 py-8">
+        <input
+          type="text"
+          bind:this={titleRef}
+          value={localTitle}
+          disabled={noteStore.selectedNote.is_deleted}
+          oninput={(e) => handleInput(e, 'title')}
+          class="mb-4 w-full bg-transparent text-4xl font-bold tracking-tight text-slate-800 outline-none placeholder:text-slate-300/70 disabled:cursor-not-allowed disabled:opacity-50"
+          placeholder="Untitled Note"
+        />
 
-      <textarea
-        bind:this={contentRef}
-        value={localContent}
-        disabled={noteStore.selectedNote.is_deleted}
-        oninput={(e) => handleInput(e, 'content')}
-        class="custom-scrollbar w-full flex-1 resize-none bg-transparent px-8 py-2 text-lg leading-relaxed text-slate-600 outline-none placeholder:text-slate-300/70 disabled:cursor-not-allowed disabled:opacity-50"
-        placeholder="Start typing your thoughts..."
-        spellcheck="false"
-      ></textarea>
+        <textarea
+          bind:this={contentRef}
+          value={localContent}
+          disabled={noteStore.selectedNote.is_deleted}
+          oninput={(e) => handleInput(e, 'content')}
+          class="w-full flex-1 resize-none bg-transparent text-lg leading-relaxed text-slate-600 outline-none placeholder:text-slate-300/70 disabled:cursor-not-allowed disabled:opacity-50"
+          placeholder="Start typing your thoughts..."
+          spellcheck="false"
+          style="min-height: 60vh;"
+        ></textarea>
+
+        <!-- Bottom Spacer to allow scrolling past end -->
+        <div class="h-20 w-full"></div>
+      </div>
     </div>
 
     <!-- Footer Stats -->
     <footer
-      class="flex items-center justify-between border-t border-slate-200/30 bg-white/10 px-6 py-2 text-[10px] font-medium tracking-wider text-slate-400 uppercase select-none"
+      class="absolute bottom-0 z-10 flex w-full items-center justify-between border-t border-slate-200/30 bg-white/40 px-6 py-2 text-[10px] font-medium tracking-wider text-slate-400 uppercase backdrop-blur-md transition-opacity duration-500 select-none
+      {isZenMode ? 'opacity-0 hover:opacity-100' : 'opacity-100'}"
     >
       <div class="flex items-center gap-4">
         <div class="flex items-center gap-1.5">
@@ -583,12 +627,16 @@
     <div
       class="flex flex-1 flex-col items-center justify-center space-y-4 text-slate-400"
     >
-      <div class="rounded-full bg-white/30 p-4 shadow-sm">
-        <PenLine size={48} class="text-indigo-300 opacity-30" />
+      <div class="rounded-full bg-white/30 p-6 shadow-sm">
+        <PenLine size={64} class="text-indigo-300 opacity-30" />
       </div>
-      <p class="text-sm font-medium opacity-60">
-        Select a note or create a new one
-      </p>
+      <div class="text-center">
+        <p class="text-lg font-medium text-slate-500">No Note Selected</p>
+        <p class="text-sm opacity-60">
+          Press <kbd class="font-sans font-bold text-indigo-400">Ctrl+N</kbd> to
+          create a new note
+        </p>
+      </div>
     </div>
   {/if}
 </section>

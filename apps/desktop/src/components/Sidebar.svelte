@@ -7,16 +7,38 @@
     Settings,
     Plus,
     Pin,
+    PinOff,
     Trash,
+    Trash2,
     Folder,
     Search,
     FileText,
+    ArchiveRestore,
   } from '@lucide/svelte';
 
   let { isOpen = $bindable() } = $props<{ isOpen: boolean }>();
+  let searchInput = $state<HTMLInputElement>();
 
-  const formatDate = (iso: string) => {
+  export function focusSearch() {
+    searchInput?.focus();
+  }
+
+  const formatSmartDate = (iso: string) => {
     const date = new Date(iso);
+    const now = new Date();
+    const diff = now.getTime() - date.getTime();
+    const days = Math.floor(diff / (1000 * 60 * 60 * 24));
+
+    if (days === 0) {
+      return new Intl.DateTimeFormat('en-US', {
+        hour: 'numeric',
+        minute: 'numeric',
+      }).format(date);
+    } else if (days < 7) {
+      return new Intl.DateTimeFormat('en-US', { weekday: 'short' }).format(
+        date
+      );
+    }
     return new Intl.DateTimeFormat('en-US', {
       month: 'short',
       day: 'numeric',
@@ -28,6 +50,18 @@
     if (window.innerWidth < 768) {
       isOpen = false;
     }
+  }
+
+  function handleKeydown(e: KeyboardEvent, id: string) {
+    if (e.key === 'Enter' || e.key === ' ') {
+      e.preventDefault();
+      selectNote(id);
+    }
+  }
+
+  function handleQuickAction(e: Event, action: () => void) {
+    e.stopPropagation();
+    action();
   }
 </script>
 
@@ -71,7 +105,7 @@
       <button
         onclick={() => noteStore.add()}
         class="rounded-lg border border-white/40 bg-white/50 p-1.5 text-indigo-600 shadow-sm transition-all hover:bg-white/80 hover:text-indigo-700 active:scale-95"
-        title="New Note"
+        title="New Note (Ctrl+N)"
       >
         <Plus size={20} />
       </button>
@@ -146,8 +180,9 @@
       />
       <input
         type="text"
+        bind:this={searchInput}
         bind:value={noteStore.searchQuery}
-        placeholder="Search notes..."
+        placeholder="Search... (Ctrl+F)"
         class="w-full rounded-xl border border-transparent bg-slate-50/50 py-2 pr-3 pl-9 text-sm transition-all outline-none placeholder:text-slate-400 focus:border-indigo-200/50 focus:bg-white/70"
       />
     </div>
@@ -156,36 +191,93 @@
   <!-- Note List -->
   <div class="custom-scrollbar flex-1 space-y-1 overflow-y-auto p-2">
     {#each noteStore.filteredNotes as note (note.id)}
-      <button
+      <div
+        role="button"
+        tabindex="0"
         onclick={() => selectNote(note.id)}
-        class="group relative w-full overflow-hidden rounded-xl border border-transparent p-3 text-left transition-all duration-200
+        onkeydown={(e) => handleKeydown(e, note.id)}
+        class="group relative w-full cursor-pointer overflow-hidden rounded-xl border p-3 text-left transition-all duration-200 select-none
         {noteStore.selectedId === note.id
-          ? 'border-white/60 bg-white/80 shadow-sm'
-          : 'hover:border-white/20 hover:bg-white/30'}"
+          ? 'border-indigo-100/50 bg-white/90 shadow-sm ring-1 ring-indigo-50'
+          : 'border-transparent hover:border-white/20 hover:bg-white/40'}"
       >
+        <!-- Active Indicator -->
+        {#if noteStore.selectedId === note.id}
+          <div
+            class="absolute top-0 left-0 h-full w-1 bg-indigo-500/80"
+            transition:fade
+          ></div>
+        {/if}
+
         <span class="mb-1 flex w-full items-start justify-between">
           <span
             class="flex items-center gap-1.5 truncate pr-2 font-semibold {noteStore.selectedId ===
             note.id
-              ? 'text-slate-800'
+              ? 'text-slate-900'
               : 'text-slate-600'}"
           >
             {#if note.is_pinned}
-              <Pin size={11} class="fill-current opacity-70" />
+              <Pin size={11} class="fill-current text-indigo-400 opacity-100" />
             {/if}
             {note.title || 'Untitled Note'}
           </span>
           <span
             class="mt-1 text-[10px] font-medium whitespace-nowrap opacity-50"
           >
-            {formatDate(note.updated_at)}
+            {formatSmartDate(note.updated_at)}
           </span>
         </span>
 
         <span class="block h-4 truncate text-xs opacity-60">
           {note.content || 'No additional text'}
         </span>
-      </button>
+
+        <!-- Hover Quick Actions -->
+        <div
+          class="absolute right-2 bottom-2 flex gap-1 opacity-0 transition-opacity duration-200 group-focus-within:opacity-100 group-hover:opacity-100"
+        >
+          {#if !note.is_deleted}
+            <button
+              onclick={(e) =>
+                handleQuickAction(e, () =>
+                  noteStore.save(
+                    note.id,
+                    note.title,
+                    note.content,
+                    note.folder,
+                    !note.is_pinned
+                  )
+                )}
+              class="rounded-md bg-white/90 p-1.5 text-slate-500 shadow-sm transition-colors hover:bg-white hover:text-indigo-600"
+              title={note.is_pinned ? 'Unpin' : 'Pin'}
+            >
+              {#if note.is_pinned}
+                <PinOff size={12} />
+              {:else}
+                <Pin size={12} />
+              {/if}
+            </button>
+            <button
+              onclick={(e) =>
+                handleQuickAction(e, () => noteStore.delete(note.id))}
+              class="rounded-md bg-white/90 p-1.5 text-slate-500 shadow-sm transition-colors hover:bg-white hover:text-red-500"
+              title="Move to Trash"
+            >
+              <Trash2 size={12} />
+            </button>
+          {:else}
+            <!-- Restore from Trash Action -->
+            <button
+              onclick={(e) =>
+                handleQuickAction(e, () => noteStore.restore(note.id))}
+              class="rounded-md bg-white/90 p-1.5 text-slate-500 shadow-sm transition-colors hover:bg-white hover:text-emerald-600"
+              title="Restore"
+            >
+              <ArchiveRestore size={12} />
+            </button>
+          {/if}
+        </div>
+      </div>
     {/each}
 
     {#if noteStore.filteredNotes.length === 0}
