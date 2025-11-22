@@ -3,7 +3,7 @@
   import { settingsStore } from '$lib/settingsStore.svelte';
   import { HistoryStore, type HistoryState } from '$lib/historyStore.svelte';
   import SettingsModal from '../components/SettingsModal.svelte';
-  import { fade } from 'svelte/transition';
+  import { fade, slide } from 'svelte/transition';
   import { onMount, tick } from 'svelte';
   import {
     Plus,
@@ -26,12 +26,15 @@
     FolderOpen,
     Trash,
     RotateCcw,
+    MoreVertical,
+    X,
   } from '@lucide/svelte';
   import '../app.css';
 
   let timer: ReturnType<typeof setTimeout>;
   let isSidebarOpen = $state(true);
   let isCopied = $state(false);
+  let isMobileMenuOpen = $state(false);
 
   // --- LOCAL EDITOR STATE ---
   let localTitle = $state('');
@@ -75,6 +78,7 @@
       // Reset History on note switch
       history.clear();
       lastInputTime = 0;
+      isMobileMenuOpen = false;
     }
   });
 
@@ -83,7 +87,6 @@
     const s = settingsStore.settings;
 
     // 1. Apply Font
-    // TODO: Should check for available fonts
     const fonts = {
       sans: '"Inter", sans-serif',
       serif: '"Merriweather", serif',
@@ -452,11 +455,13 @@
           <span>This note is in the trash. Editing is disabled.</span>
         </div>
       {/if}
+
       <!-- Toolbar / Header -->
       <header
         data-tauri-drag-region
-        class="flex h-14 items-center justify-between border-b border-slate-200/30 bg-white/10 px-4"
+        class="flex h-14 min-h-[3.5rem] items-center justify-between gap-4 border-b border-slate-200/30 bg-white/10 px-4"
       >
+        <!-- LEFT SIDE: Sidebar Toggle + Standard Tools -->
         <div class="flex items-center gap-4">
           <!-- Sidebar Toggle Button -->
           <button
@@ -470,8 +475,8 @@
           </button>
 
           {#if !noteStore.selectedNote.is_deleted}
-            <!-- Folder / Pin Controls -->
-            <div class="flex items-center gap-2">
+            <!-- DESKTOP: Folder/Pin (Hidden on Mobile) -->
+            <div class="hidden items-center gap-2 md:flex">
               <button
                 onclick={togglePin}
                 class="rounded-lg p-1.5 transition-all hover:bg-white/50 active:scale-90
@@ -497,25 +502,11 @@
               </div>
             </div>
           {/if}
-
-          <!-- Sync Status -->
-          <div
-            class="flex items-center gap-2 border-l border-slate-300/30 pl-4 font-mono text-xs text-slate-400 select-none"
-          >
-            {#if noteStore.syncState === 'saving'}
-              <Loader2 size={12} class="animate-spin" />
-              <span class="hidden sm:inline">Saving...</span>
-            {:else if noteStore.syncState === 'saved'}
-              <CheckCircle2 size={12} class="text-emerald-500" />
-              <span class="hidden sm:inline">Saved</span>
-            {:else if noteStore.syncState === 'error'}
-              <span class="text-red-400">Error</span>
-            {/if}
-          </div>
         </div>
 
-        <div class="flex items-center gap-1">
-          <!-- HISTORY CONTROLS -->
+        <!-- RIGHT SIDE -->
+        <!-- DESKTOP: Full Action Bar -->
+        <div class="hidden items-center gap-1 md:flex">
           {#if !noteStore.selectedNote.is_deleted}
             <button
               onclick={performUndo}
@@ -567,10 +558,10 @@
               class="group flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-xs font-medium text-slate-500 transition-all hover:bg-white/50 hover:text-emerald-600"
             >
               <RotateCcw size={14} />
-              Restore
+              <span class="hidden sm:inline">Restore</span>
             </button>
           {/if}
-          <!-- Delete Button (Context Aware) -->
+
           <button
             onclick={() =>
               noteStore.selectedNote &&
@@ -587,6 +578,129 @@
             {/if}
           </button>
         </div>
+
+        <!-- MOBILE: Menu Trigger -->
+        <div class="flex items-center md:hidden">
+          <button
+            onclick={() => (isMobileMenuOpen = !isMobileMenuOpen)}
+            class="rounded-lg p-2 text-slate-500 transition-all hover:bg-white/50 hover:text-indigo-600"
+          >
+            {#if isMobileMenuOpen}
+              <X size={20} />
+            {:else}
+              <MoreVertical size={20} />
+            {/if}
+          </button>
+        </div>
+
+        <!-- MOBILE: Dropdown Menu -->
+        {#if isMobileMenuOpen}
+          <!-- Backdrop -->
+          <div
+            role="button"
+            tabindex="0"
+            class="fixed inset-0 z-40 bg-black/5 backdrop-blur-[1px] md:hidden"
+            onclick={() => (isMobileMenuOpen = false)}
+            onkeydown={(e) => e.key === 'Escape' && (isMobileMenuOpen = false)}
+          ></div>
+
+          <!-- Menu Content -->
+          <div
+            class="absolute top-16 right-2 z-50 flex w-64 flex-col gap-2 rounded-xl border border-white/60 bg-white/90 p-3 shadow-2xl backdrop-blur-xl md:hidden dark:border-slate-700 dark:bg-slate-900/95"
+            transition:slide={{ duration: 150 }}
+          >
+            {#if !noteStore.selectedNote.is_deleted}
+              <!-- Mobile Folder/Pin Row -->
+              <div
+                class="flex items-center gap-2 border-b border-slate-200/50 pb-2"
+              >
+                <button
+                  onclick={togglePin}
+                  class="flex items-center gap-2 rounded-lg p-2 text-sm font-medium transition-all
+                    {localPinned
+                    ? 'bg-indigo-50 text-indigo-600'
+                    : 'text-slate-500 hover:bg-slate-100'}"
+                >
+                  <Pin size={16} class={localPinned ? 'fill-current' : ''} />
+                </button>
+                <div
+                  class="flex flex-1 items-center gap-2 rounded-lg bg-slate-100 px-3 py-2 text-sm"
+                >
+                  <FolderOpen size={14} class="text-slate-400" />
+                  <input
+                    type="text"
+                    value={localFolder || ''}
+                    onchange={updateFolder}
+                    placeholder="No Folder"
+                    class="w-full bg-transparent outline-none"
+                  />
+                </div>
+              </div>
+
+              <!-- Mobile Actions Row -->
+              <div class="flex justify-between pt-1">
+                <div class="flex gap-1">
+                  <button
+                    onclick={performUndo}
+                    disabled={!history.canUndo}
+                    class="rounded-lg p-2 text-slate-500 hover:bg-slate-100 disabled:opacity-30"
+                  >
+                    <Undo2 size={18} />
+                  </button>
+                  <button
+                    onclick={performRedo}
+                    disabled={!history.canRedo}
+                    class="rounded-lg p-2 text-slate-500 hover:bg-slate-100 disabled:opacity-30"
+                  >
+                    <Redo2 size={18} />
+                  </button>
+                </div>
+                <div class="flex gap-1 border-l border-slate-200 pl-2">
+                  <button
+                    onclick={copyToClipboard}
+                    class="rounded-lg p-2 text-slate-500 hover:bg-slate-100"
+                  >
+                    {#if isCopied}
+                      <Check size={18} class="text-emerald-500" />
+                    {:else}
+                      <Copy size={18} />
+                    {/if}
+                  </button>
+                  <button
+                    onclick={() =>
+                      noteStore.selectedNote &&
+                      noteStore.delete(noteStore.selectedNote.id)}
+                    class="rounded-lg p-2 text-red-500 hover:bg-red-50"
+                  >
+                    <Trash2 size={18} />
+                  </button>
+                </div>
+              </div>
+            {:else}
+              <!-- Trash Mobile View -->
+              <div class="flex flex-col gap-2">
+                <button
+                  onclick={() =>
+                    noteStore.selectedNote &&
+                    noteStore.restore(noteStore.selectedNote.id)}
+                  class="flex w-full items-center justify-center gap-2 rounded-lg bg-slate-100 py-2 text-sm font-medium text-slate-600 hover:bg-emerald-50 hover:text-emerald-600"
+                >
+                  <RotateCcw size={16} />
+                  Restore Note
+                </button>
+                <button
+                  onclick={() =>
+                    noteStore.selectedNote &&
+                    noteStore.delete(noteStore.selectedNote.id)}
+                  class="flex w-full items-center justify-center gap-2 rounded-lg bg-red-50 py-2 text-sm font-medium text-red-600 hover:bg-red-100"
+                >
+                  <Trash2 size={16} />
+                  Delete Permanently
+                </button>
+              </div>
+            {/if}
+          </div>
+        {/if}
       </header>
 
       <!-- Input Area - Bounded to LOCAL state variables -->
@@ -630,8 +744,21 @@
             <span>{charCount} Chars</span>
           </div>
         </div>
-        <div class="opacity-50">
-          v{noteStore.selectedNote.version}
+        <div class="flex items-center gap-4">
+          <div class="flex items-center gap-1.5">
+            {#if noteStore.syncState === 'saving'}
+              <Loader2 size={10} class="animate-spin" />
+              <span class="hidden sm:inline">Saving...</span>
+            {:else if noteStore.syncState === 'saved'}
+              <CheckCircle2 size={10} class="text-emerald-500" />
+              <span class="hidden text-emerald-600 sm:inline">Saved</span>
+            {:else if noteStore.syncState === 'error'}
+              <span class="text-red-400">Error</span>
+            {/if}
+          </div>
+          <div class="opacity-50">
+            v{noteStore.selectedNote.version}
+          </div>
         </div>
       </footer>
     {:else}
