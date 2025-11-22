@@ -23,12 +23,14 @@ impl DatabaseConnection {
         self.conn.execute(
             "CREATE TABLE IF NOT EXISTS notes (
                 id TEXT PRIMARY KEY,
+                folder TEXT,
                 title TEXT NOT NULL,
                 content TEXT NOT NULL,
                 created_at TEXT NOT NULL,
                 updated_at TEXT NOT NULL,
                 version INTEGER NOT NULL,
-                is_deleted BOOLEAN NOT NULL DEFAULT 0
+                is_deleted BOOLEAN NOT NULL DEFAULT 0,
+                is_pinned BOOLEAN NOT NULL DEFAULT 0
             )",
             [],
         )?;
@@ -43,12 +45,6 @@ impl DatabaseConnection {
             )",
             [],
         )?;
-
-        // MIGRATION: Add columns if they don't exist (safe for existing DBs)
-        let _ = self.conn.execute("ALTER TABLE notes ADD COLUMN folder TEXT", []);
-        let _ = self
-            .conn
-            .execute("ALTER TABLE notes ADD COLUMN is_pinned BOOLEAN NOT NULL DEFAULT 0", []);
 
         Ok(())
     }
