@@ -1,4 +1,5 @@
 import "package:flutter/material.dart";
+import "package:flutter_screenutil/flutter_screenutil.dart";
 import "package:google_fonts/google_fonts.dart";
 
 // ignore_for_file: avoid_redundant_argument_values
@@ -8,12 +9,12 @@ class AppTheme {
   AppTheme._();
 
   // --- Color Definitions (Notaro Palettes) ---
-  static const _primary = Color(0xFF5E35B1); // Deep Purple Seed
+  static const _primary = Color(0xFF5E35B1);
   static const _primaryDark = Color(0xFFD1C4E9);
   static const _onPrimaryDark = Color(0xFF311B92);
   static const _secondary = Color(0xFF7E57C2);
   static const _secondaryDark = Color(0xFF9575CD);
-  static const _tertiary = Color(0xFF00897B); // Teal accent
+  static const _tertiary = Color(0xFF00897B);
   static const _error = Color(0xFFBA1A1A);
   static const _errorDark = Color(0xFFFF897D);
   static const _onErrorDark = Color(0xFF410002);
@@ -62,31 +63,29 @@ class AppTheme {
     shadow: const Color(0xFF000000),
   );
 
-  // --- Base TextTheme with Font sizes and weights ---
-  static TextTheme get _baseTextTheme => const TextTheme(
-    displayLarge: TextStyle(fontWeight: FontWeight.w600, fontSize: 64),
-    displayMedium: TextStyle(fontWeight: FontWeight.w600, fontSize: 44),
-    displaySmall: TextStyle(fontWeight: FontWeight.w600, fontSize: 36),
-    headlineLarge: TextStyle(fontWeight: FontWeight.w600, fontSize: 32),
-    headlineMedium: TextStyle(fontWeight: FontWeight.w600, fontSize: 28),
-    headlineSmall: TextStyle(fontWeight: FontWeight.w600, fontSize: 24),
-    titleLarge: TextStyle(fontWeight: FontWeight.w600, fontSize: 20),
-    titleMedium: TextStyle(fontWeight: FontWeight.w600, fontSize: 18),
-    titleSmall: TextStyle(fontWeight: FontWeight.w600, fontSize: 16),
-    bodyLarge: TextStyle(fontSize: 16),
-    bodyMedium: TextStyle(fontSize: 14),
-    bodySmall: TextStyle(fontSize: 12),
-    labelLarge: TextStyle(fontSize: 16),
-    labelMedium: TextStyle(fontSize: 14),
-    labelSmall: TextStyle(fontSize: 12),
+  // --- Base TextTheme with Responsive Font sizes ---
+  static TextTheme get _baseTextTheme => TextTheme(
+    displayLarge: TextStyle(fontWeight: FontWeight.w600, fontSize: 64.sp),
+    displayMedium: TextStyle(fontWeight: FontWeight.w600, fontSize: 44.sp),
+    displaySmall: TextStyle(fontWeight: FontWeight.w600, fontSize: 36.sp),
+    headlineLarge: TextStyle(fontWeight: FontWeight.w600, fontSize: 32.sp),
+    headlineMedium: TextStyle(fontWeight: FontWeight.w600, fontSize: 28.sp),
+    headlineSmall: TextStyle(fontWeight: FontWeight.w600, fontSize: 24.sp),
+    titleLarge: TextStyle(fontWeight: FontWeight.w600, fontSize: 20.sp),
+    titleMedium: TextStyle(fontWeight: FontWeight.w600, fontSize: 18.sp),
+    titleSmall: TextStyle(fontWeight: FontWeight.w600, fontSize: 16.sp),
+    bodyLarge: TextStyle(fontSize: 16.sp),
+    bodyMedium: TextStyle(fontSize: 14.sp),
+    bodySmall: TextStyle(fontSize: 12.sp),
+    labelLarge: TextStyle(fontSize: 16.sp),
+    labelMedium: TextStyle(fontSize: 14.sp),
+    labelSmall: TextStyle(fontSize: 12.sp),
   );
 
-  // --- Merged & Colored TextThemes ---
   static TextTheme _buildTextTheme(
     final TextTheme base,
     final ColorScheme colorScheme,
   ) {
-    // Merges Readex Pro for headlines and Inter for body/label text
     final TextTheme readexTheme = GoogleFonts.readexProTextTheme(base);
     final TextTheme interTheme = GoogleFonts.interTextTheme(base);
     return readexTheme
@@ -105,9 +104,11 @@ class AppTheme {
   }
 
   // --- Main ThemeData Definitions ---
-  static ThemeData get light => _buildThemeData(_lightColorScheme);
-
-  static ThemeData get dark => _buildThemeData(_darkColorScheme);
+  // Now functions to ensure Context/ScreenUtil is ready
+  static ThemeData light(final BuildContext context) =>
+      _buildThemeData(_lightColorScheme);
+  static ThemeData dark(final BuildContext context) =>
+      _buildThemeData(_darkColorScheme);
 
   static ThemeData _buildThemeData(final ColorScheme colorScheme) {
     final TextTheme textTheme = _buildTextTheme(_baseTextTheme, colorScheme);
@@ -120,21 +121,14 @@ class AppTheme {
       scaffoldBackgroundColor: colorScheme.surface,
       appBarTheme: AppBarTheme(
         backgroundColor: colorScheme.surface,
-        shadowColor: colorScheme.shadow.withValues(alpha: 0.1),
+        scrolledUnderElevation: 0,
         elevation: 0,
-        scrolledUnderElevation: 2,
-        surfaceTintColor: Colors.transparent,
         centerTitle: false,
         titleTextStyle: textTheme.headlineMedium,
-        iconTheme: IconThemeData(color: colorScheme.onSurface),
-        actionsIconTheme: IconThemeData(color: colorScheme.tertiary),
-      ),
-      textButtonTheme: TextButtonThemeData(
-        style: TextButton.styleFrom(
-          foregroundColor: colorScheme.primary,
-          textStyle: textTheme.titleSmall?.copyWith(
-            fontWeight: FontWeight.bold,
-          ),
+        iconTheme: IconThemeData(color: colorScheme.onSurface, size: 24.sp),
+        actionsIconTheme: IconThemeData(
+          color: colorScheme.tertiary,
+          size: 24.sp,
         ),
       ),
       elevatedButtonTheme: ElevatedButtonThemeData(
@@ -142,66 +136,38 @@ class AppTheme {
           backgroundColor: colorScheme.primary,
           foregroundColor: colorScheme.onPrimary,
           shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(25),
+            borderRadius: BorderRadius.circular(25.r),
           ),
-          padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
+          padding: EdgeInsets.symmetric(horizontal: 24.w, vertical: 12.h),
           textStyle: textTheme.titleSmall?.copyWith(
             fontWeight: FontWeight.bold,
           ),
         ),
-      ),
-      outlinedButtonTheme: OutlinedButtonThemeData(
-        style: OutlinedButton.styleFrom(
-          foregroundColor: colorScheme.primary,
-          side: BorderSide(color: colorScheme.outline),
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(25),
-          ),
-          padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
-          textStyle: textTheme.titleSmall?.copyWith(
-            fontWeight: FontWeight.bold,
-          ),
-        ),
-      ),
-      iconButtonTheme: IconButtonThemeData(
-        style: IconButton.styleFrom(foregroundColor: colorScheme.onSurface),
       ),
       inputDecorationTheme: InputDecorationTheme(
         filled: true,
         fillColor: colorScheme.surfaceContainerLowest,
+        contentPadding: EdgeInsets.all(16.w),
         border: OutlineInputBorder(
           borderSide: BorderSide(color: colorScheme.outline),
-          borderRadius: BorderRadius.circular(12),
+          borderRadius: BorderRadius.circular(12.r),
         ),
         enabledBorder: OutlineInputBorder(
           borderSide: BorderSide(color: colorScheme.outline),
-          borderRadius: BorderRadius.circular(12),
+          borderRadius: BorderRadius.circular(12.r),
         ),
         focusedBorder: OutlineInputBorder(
-          borderSide: BorderSide(color: colorScheme.primary, width: 2),
-          borderRadius: BorderRadius.circular(12),
-        ),
-        errorBorder: OutlineInputBorder(
-          borderSide: BorderSide(color: colorScheme.error),
-          borderRadius: BorderRadius.circular(12),
-        ),
-        focusedErrorBorder: OutlineInputBorder(
-          borderSide: BorderSide(color: colorScheme.error, width: 2),
-          borderRadius: BorderRadius.circular(12),
-        ),
-        hintStyle: textTheme.bodyLarge?.copyWith(
-          color: colorScheme.onSurfaceVariant,
+          borderSide: BorderSide(color: colorScheme.primary, width: 2.w),
+          borderRadius: BorderRadius.circular(12.r),
         ),
       ),
       cardTheme: CardThemeData(
-        elevation: 1,
+        elevation: 0,
         shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(16),
+          borderRadius: BorderRadius.circular(16.r),
           side: const BorderSide(color: Colors.transparent, width: 0),
         ),
         color: colorScheme.surfaceContainer,
-        surfaceTintColor: Colors.transparent,
-        shadowColor: colorScheme.shadow.withValues(alpha: 0.1),
       ),
     );
   }

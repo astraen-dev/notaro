@@ -2,6 +2,7 @@ import "dart:async";
 
 import "package:flutter/material.dart";
 import "package:flutter_riverpod/flutter_riverpod.dart";
+import "package:flutter_screenutil/flutter_screenutil.dart";
 import "package:go_router/go_router.dart";
 import "package:lucide_icons_flutter/lucide_icons.dart";
 import "package:notaro_mobile/core/ui/theme_provider.dart";
@@ -40,27 +41,42 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
     }).toList();
 
     return Scaffold(
+      extendBody: true,
       body: CustomScrollView(
+        physics: const BouncingScrollPhysics(),
         slivers: [
-          // Native Mobile Header
+          // Glassy Sliver App Bar
           SliverAppBar.large(
-            title: const Text("Notaro"),
+            title: Text(
+              "Notaro",
+              style: TextStyle(
+                fontWeight: FontWeight.w800,
+                letterSpacing: -1.sp,
+              ),
+            ),
             centerTitle: false,
+            floating: true,
+            expandedHeight: 120.h,
+            backgroundColor: colorScheme.surface.withValues(alpha: 0.9),
+            surfaceTintColor: Colors.transparent,
             actions: [
               IconButton(
                 icon: Icon(
                   themeMode == ThemeMode.dark
                       ? LucideIcons.sun
                       : LucideIcons.moon,
+                  size: 22.sp,
                 ),
                 onPressed: () =>
                     ref.read(themeModeProvider.notifier).toggleTheme(),
               ),
-              IconButton(
-                icon: const Icon(LucideIcons.settings),
-                onPressed: () {}, // Todo: Settings Route
+              Padding(
+                padding: EdgeInsets.only(right: 8.w),
+                child: IconButton(
+                  icon: Icon(LucideIcons.settings, size: 22.sp),
+                  onPressed: () {},
+                ),
               ),
-              const SizedBox(width: 8),
             ],
           ),
 
@@ -68,7 +84,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
           SliverToBoxAdapter(
             child: SingleChildScrollView(
               scrollDirection: Axis.horizontal,
-              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+              padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 16.h),
               child: Row(
                 children: [
                   _FilterChip(
@@ -77,14 +93,14 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                     isSelected: _selectedFilter == "all",
                     onTap: () => setState(() => _selectedFilter = "all"),
                   ),
-                  const SizedBox(width: 8),
+                  SizedBox(width: 8.w),
                   _FilterChip(
                     label: "Pinned",
                     icon: LucideIcons.pin,
                     isSelected: _selectedFilter == "pinned",
                     onTap: () => setState(() => _selectedFilter = "pinned"),
                   ),
-                  const SizedBox(width: 8),
+                  SizedBox(width: 8.w),
                   _FilterChip(
                     label: "Trash",
                     icon: LucideIcons.trash2,
@@ -99,20 +115,22 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
           // Notes List
           if (filteredNotes.isEmpty)
             SliverFillRemaining(
+              hasScrollBody: false,
               child: Center(
                 child: Column(
                   mainAxisSize: MainAxisSize.min,
                   children: [
                     Icon(
                       LucideIcons.fileText,
-                      size: 48,
-                      color: colorScheme.outline.withValues(alpha: 0.5),
+                      size: 64.sp,
+                      color: colorScheme.outline.withValues(alpha: 0.3),
                     ),
-                    const SizedBox(height: 16),
+                    SizedBox(height: 16.h),
                     Text(
                       "No notes found",
                       style: Theme.of(context).textTheme.bodyLarge?.copyWith(
                         color: colorScheme.onSurfaceVariant,
+                        fontSize: 16.sp,
                       ),
                     ),
                   ],
@@ -121,32 +139,35 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
             )
           else
             SliverPadding(
-              padding: const EdgeInsets.fromLTRB(16, 8, 16, 100),
+              padding: EdgeInsets.fromLTRB(16.w, 0, 16.w, 100.h),
               sliver: SliverList.builder(
                 itemCount: filteredNotes.length,
                 itemBuilder: (final context, final index) {
                   final Note note = filteredNotes[index];
 
-                  // Swipe to Delete/Restore
                   return Dismissible(
                     key: Key(note.id),
                     direction: DismissDirection.endToStart,
                     background: Container(
+                      margin: EdgeInsets.only(bottom: 12.h),
                       alignment: Alignment.centerRight,
-                      padding: const EdgeInsets.only(right: 20),
-                      color: colorScheme.errorContainer,
+                      decoration: BoxDecoration(
+                        color: colorScheme.errorContainer,
+                        borderRadius: BorderRadius.circular(20.r),
+                      ),
+                      padding: EdgeInsets.only(right: 24.w),
                       child: Icon(
                         LucideIcons.trash2,
                         color: colorScheme.onErrorContainer,
+                        size: 24.sp,
                       ),
                     ),
                     confirmDismiss: (final direction) async {
                       if (_selectedFilter == "trash") {
-                        // Permanently delete logic would go here
                         return false;
                       }
                       ref.read(notesProvider.notifier).deleteNote(note.id);
-                      return false; // Don't remove from UI immediately, let provider update state
+                      return false;
                     },
                     child: NoteCard(
                       note: note,
@@ -168,12 +189,24 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
       floatingActionButton: FloatingActionButton.extended(
         onPressed: () {
           ref.read(notesProvider.notifier).addNote();
-          // Get the newly created note (first in list) and navigate
           final String newId = ref.read(notesProvider).first.id;
           unawaited(context.pushNamed("editor", pathParameters: {"id": newId}));
         },
-        icon: const Icon(LucideIcons.plus),
-        label: const Text("New Note"),
+        backgroundColor: colorScheme.primary,
+        elevation: 4,
+        highlightElevation: 2,
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(30.r),
+        ),
+        icon: Icon(LucideIcons.plus, color: colorScheme.onPrimary, size: 24.sp),
+        label: Text(
+          "New Note",
+          style: TextStyle(
+            color: colorScheme.onPrimary,
+            fontWeight: FontWeight.bold,
+            fontSize: 14.sp,
+          ),
+        ),
       ),
     );
   }
@@ -197,31 +230,33 @@ class _FilterChip extends StatelessWidget {
     final ColorScheme colorScheme = Theme.of(context).colorScheme;
     return InkWell(
       onTap: onTap,
-      borderRadius: BorderRadius.circular(20),
-      child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+      borderRadius: BorderRadius.circular(24.r),
+      child: AnimatedContainer(
+        duration: const Duration(milliseconds: 200),
+        padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 10.h),
         decoration: BoxDecoration(
           color: isSelected ? colorScheme.primaryContainer : Colors.transparent,
           border: Border.all(
             color: isSelected ? Colors.transparent : colorScheme.outlineVariant,
+            width: 1.w,
           ),
-          borderRadius: BorderRadius.circular(20),
+          borderRadius: BorderRadius.circular(24.r),
         ),
         child: Row(
           children: [
             Icon(
               icon,
-              size: 14,
+              size: 16.sp,
               color: isSelected
                   ? colorScheme.onPrimaryContainer
                   : colorScheme.onSurfaceVariant,
             ),
-            const SizedBox(width: 6),
+            SizedBox(width: 8.w),
             Text(
               label,
               style: TextStyle(
-                fontSize: 13,
-                fontWeight: FontWeight.w500,
+                fontSize: 13.sp,
+                fontWeight: FontWeight.w600,
                 color: isSelected
                     ? colorScheme.onPrimaryContainer
                     : colorScheme.onSurfaceVariant,

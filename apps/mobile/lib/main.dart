@@ -1,5 +1,6 @@
 import "package:flutter/material.dart";
 import "package:flutter_riverpod/flutter_riverpod.dart";
+import "package:flutter_screenutil/flutter_screenutil.dart";
 import "package:go_router/go_router.dart";
 import "package:notaro_mobile/app_constants.dart";
 import "package:notaro_mobile/core/navigation/app_router.dart";
@@ -21,15 +22,19 @@ class NotaroApp extends ConsumerWidget {
     // Watch the theme mode provider
     final ThemeMode mode = ref.watch(themeModeProvider);
 
-    return MaterialApp.router(
-      title: AppConstants.appName,
-      // Router Config
-      routerConfig: goRouter,
-      // Theme Config - Using Static AppTheme
-      themeMode: mode,
-      theme: AppTheme.light,
-      darkTheme: AppTheme.dark,
-      debugShowCheckedModeBanner: false,
+    return ScreenUtilInit(
+      // Pixel 9 Pro dimensions as design baseline in dp
+      designSize: const Size(427, 952),
+      minTextAdapt: true,
+      splitScreenMode: true,
+      builder: (final context, final child) => MaterialApp.router(
+        title: AppConstants.appName,
+        routerConfig: goRouter,
+        themeMode: mode,
+        theme: AppTheme.light(context),
+        darkTheme: AppTheme.dark(context),
+        debugShowCheckedModeBanner: false,
+      ),
     );
   }
 }
