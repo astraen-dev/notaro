@@ -29,6 +29,34 @@ re-implement it in Dart. Instead, it uses a Foreign Function Interface (FFI) bri
    - **Android:** `flutter build apk` or `flutter build appbundle`
    - **iOS:** `flutter build ipa`
 
+## Project Structure
+
+The codebase follows a **feature-first** architecture and uses separate entry points for different
+build environments (flavors).
+
+```
+lib/
+├── core/
+│   ├── data/         # Shared data sources
+│   ├── navigation/   # GoRouter configuration and routes
+│   ├── ui/           # App-wide UI (themes, navigation shell)
+│   └── utils/        # Shared utilities and extensions
+│
+├── features/
+│   ├── [feature_name]/
+│   │   ├── application/  # Business logic & Riverpod providers
+│   │   ├── data/         # Feature-specific repositories
+│   │   ├── domain/       # Models and entities (often with Freezed)
+│   │   └── presentation/ # UI (screens, widgets)
+│   └── ...
+│
+├── shared/
+│   ├── domain/       # Domain models shared across multiple features
+│   └── widgets/      # Reusable widgets (buttons, dialogs, etc.)
+│
+├── main.dart  # Entry point
+```
+
 ## License
 
 This package is licensed under the MIT License. See the [LICENSE](../../LICENSE) file in the root of the repository for the full text.
