@@ -5,10 +5,10 @@ import "package:flutter_riverpod/flutter_riverpod.dart";
 import "package:flutter_screenutil/flutter_screenutil.dart";
 import "package:go_router/go_router.dart";
 import "package:lucide_icons_flutter/lucide_icons.dart";
-import "package:notaro_mobile/core/ui/theme_provider.dart";
 import "package:notaro_mobile/features/home/presentation/widgets/note_card.dart";
 import "package:notaro_mobile/features/notes/application/notes_provider.dart";
 import "package:notaro_mobile/features/notes/domain/note.dart";
+import "package:notaro_mobile/features/settings/presentation/settings_modal.dart";
 import "package:notaro_mobile/shared/widgets/mesh_gradient_scaffold.dart";
 
 class HomeScreen extends ConsumerStatefulWidget {
@@ -24,7 +24,6 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
   @override
   Widget build(final BuildContext context) {
     final List<Note> notes = ref.watch(notesProvider);
-    final ThemeMode themeMode = ref.watch(themeModeProvider);
     final ColorScheme colorScheme = Theme.of(context).colorScheme;
 
     // Filter Logic
@@ -88,18 +87,18 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
             // Let mesh show through
             actions: [
               IconButton(
-                icon: Icon(
-                  themeMode == ThemeMode.dark
-                      ? LucideIcons.sun
-                      : LucideIcons.moon,
-                  size: 20.sp,
-                ),
-                onPressed: () =>
-                    ref.read(themeModeProvider.notifier).toggleTheme(),
-              ),
-              IconButton(
                 icon: Icon(LucideIcons.settings, size: 20.sp),
-                onPressed: () {},
+                onPressed: () {
+                  unawaited(
+                    showModalBottomSheet(
+                      context: context,
+                      backgroundColor: Colors.transparent,
+                      barrierColor: Colors.black.withValues(alpha: 0.2),
+                      isScrollControlled: true,
+                      builder: (final _) => const SettingsModal(),
+                    ),
+                  );
+                },
               ),
               SizedBox(width: 8.w),
             ],
