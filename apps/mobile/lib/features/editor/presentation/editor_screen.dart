@@ -1,3 +1,4 @@
+import "dart:ui";
 import "package:flutter/material.dart";
 import "package:flutter_riverpod/flutter_riverpod.dart";
 import "package:flutter_screenutil/flutter_screenutil.dart";
@@ -5,6 +6,7 @@ import "package:go_router/go_router.dart";
 import "package:lucide_icons_flutter/lucide_icons.dart";
 import "package:notaro_mobile/features/notes/application/notes_provider.dart";
 import "package:notaro_mobile/features/notes/domain/note.dart";
+import "package:notaro_mobile/shared/widgets/mesh_gradient_scaffold.dart";
 
 class EditorScreen extends ConsumerStatefulWidget {
   const EditorScreen({required this.noteId, super.key});
@@ -65,188 +67,177 @@ class _EditorScreenState extends ConsumerState<EditorScreen> {
           },
         );
 
-    final ThemeData theme = Theme.of(context);
-    final ColorScheme colorScheme = theme.colorScheme;
+    final bool isDark = Theme.of(context).brightness == Brightness.dark;
 
-    return Scaffold(
-      backgroundColor: colorScheme.surface,
-      appBar: AppBar(
-        scrolledUnderElevation: 0,
-        leadingWidth: 60.w,
-        leading: IconButton(
-          icon: Icon(LucideIcons.chevronLeft, size: 28.sp),
-          style: IconButton.styleFrom(
-            backgroundColor: colorScheme.surfaceContainerHighest.withValues(
-              alpha: 0.3,
-            ),
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(12.r),
-            ),
-          ),
-          padding: EdgeInsets.zero,
-          onPressed: context.pop,
-        ),
-        actions: [
-          IconButton(
-            icon: Icon(
-              note.isPinned ? LucideIcons.pin : LucideIcons.pinOff,
-              color: note.isPinned
-                  ? colorScheme.primary
-                  : colorScheme.onSurfaceVariant,
-              size: 22.sp,
-            ),
-            onPressed: () {
-              ref.read(notesProvider.notifier).togglePin(note.id);
-            },
-          ),
-          IconButton(
-            icon: Icon(LucideIcons.ellipsisVertical, size: 22.sp),
-            onPressed: () async {
-              await _showOptionsSheet(context, note);
-            },
-          ),
-          SizedBox(width: 8.w),
-        ],
-      ),
+    // Use MeshGradientScaffold for background consistency
+    return MeshGradientScaffold(
       body: SafeArea(
         child: Column(
           children: [
+            // 1. Toolbar (Matches Desktop Header)
             Padding(
-              padding: EdgeInsets.symmetric(horizontal: 24.w, vertical: 12.h),
-              child: TextField(
-                controller: _titleController,
-                onChanged: (_) => _save(),
-                style: theme.textTheme.headlineSmall?.copyWith(
-                  fontWeight: FontWeight.w800,
-                  color: colorScheme.onSurface,
-                  fontSize: 28.sp,
-                  height: 1.2,
-                ),
-                decoration: InputDecoration(
-                  hintText: "Title",
-                  hintStyle: TextStyle(
-                    color: colorScheme.onSurface.withValues(alpha: 0.3),
+              padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 8.h),
+              child: Row(
+                children: [
+                  IconButton(
+                    icon: Icon(LucideIcons.chevronLeft, size: 24.sp),
+                    style: IconButton.styleFrom(
+                      backgroundColor: Colors.white.withValues(
+                        alpha: isDark ? 0.1 : 0.5,
+                      ),
+                    ),
+                    onPressed: context.pop,
                   ),
-                  border: InputBorder.none,
-                  focusedBorder: InputBorder.none,
-                  enabledBorder: InputBorder.none,
-                  contentPadding: EdgeInsets.zero,
-                  filled: false,
-                ),
-                maxLines: null,
-                textInputAction: TextInputAction.next,
+                  const Spacer(),
+                  IconButton(
+                    icon: Icon(
+                      note.isPinned ? LucideIcons.pin : LucideIcons.pinOff,
+                      size: 20.sp,
+                      color: note.isPinned
+                          ? Theme.of(context).colorScheme.primary
+                          : null,
+                    ),
+                    style: IconButton.styleFrom(
+                      backgroundColor: Colors.white.withValues(
+                        alpha: isDark ? 0.1 : 0.5,
+                      ),
+                    ),
+                    onPressed: () =>
+                        ref.read(notesProvider.notifier).togglePin(note.id),
+                  ),
+                  SizedBox(width: 8.w),
+                  IconButton(
+                    icon: Icon(LucideIcons.trash2, size: 20.sp),
+                    style: IconButton.styleFrom(
+                      backgroundColor: Colors.white.withValues(
+                        alpha: isDark ? 0.1 : 0.5,
+                      ),
+                      foregroundColor: Theme.of(context).colorScheme.error,
+                    ),
+                    onPressed: () {
+                      ref.read(notesProvider.notifier).deleteNote(note.id);
+                      context.pop();
+                    },
+                  ),
+                ],
               ),
             ),
+
+            // 2. Editor Pane (Glass Card)
             Expanded(
-              child: TextField(
-                controller: _contentController,
-                onChanged: (_) => _save(),
-                style: theme.textTheme.bodyLarge?.copyWith(
-                  height: 1.6,
-                  color: colorScheme.onSurface,
-                  fontSize: 16.sp,
-                ),
-                decoration: InputDecoration(
-                  hintText: "Start typing...",
-                  hintStyle: TextStyle(
-                    color: colorScheme.onSurfaceVariant.withValues(alpha: 0.5),
+              child: Container(
+                margin: EdgeInsets.fromLTRB(16.w, 0, 16.w, 16.h),
+                child: ClipRRect(
+                  borderRadius: BorderRadius.circular(24.r),
+                  child: BackdropFilter(
+                    filter: ImageFilter.blur(sigmaX: 20, sigmaY: 20),
+                    child: DecoratedBox(
+                      decoration: BoxDecoration(
+                        color: isDark
+                            ? Colors.black.withValues(alpha: 0.2)
+                            : Colors.white.withValues(alpha: 0.6),
+                        border: Border.all(
+                          color: Colors.white.withValues(
+                            alpha: isDark ? 0.1 : 0.4,
+                          ),
+                        ),
+                        borderRadius: BorderRadius.circular(24.r),
+                      ),
+                      child: Column(
+                        children: [
+                          // Title Input
+                          Padding(
+                            padding: EdgeInsets.fromLTRB(
+                              24.w,
+                              32.h,
+                              24.w,
+                              16.h,
+                            ),
+                            child: TextField(
+                              controller: _titleController,
+                              onChanged: (_) => _save(),
+                              style: TextStyle(
+                                fontSize: 28.sp,
+                                fontWeight: FontWeight.bold,
+                                letterSpacing: -0.5,
+                                height: 1.2,
+                              ),
+                              decoration: InputDecoration(
+                                hintText: "Untitled Note",
+                                hintStyle: TextStyle(
+                                  color: Theme.of(context).colorScheme.onSurface
+                                      .withValues(alpha: 0.3),
+                                ),
+                                border: InputBorder.none,
+                                contentPadding: EdgeInsets.zero,
+                              ),
+                              maxLines: null,
+                              textInputAction: TextInputAction.next,
+                            ),
+                          ),
+
+                          // Content Input
+                          Expanded(
+                            child: TextField(
+                              controller: _contentController,
+                              onChanged: (_) => _save(),
+                              style: TextStyle(
+                                fontSize: 16.sp,
+                                height: 1.6,
+                                color: Theme.of(
+                                  context,
+                                ).colorScheme.onSurface.withValues(alpha: 0.9),
+                              ),
+                              decoration: InputDecoration(
+                                hintText: "Start typing...",
+                                hintStyle: TextStyle(
+                                  color: Theme.of(context)
+                                      .colorScheme
+                                      .onSurfaceVariant
+                                      .withValues(alpha: 0.4),
+                                ),
+                                border: InputBorder.none,
+                                contentPadding: EdgeInsets.symmetric(
+                                  horizontal: 24.w,
+                                ),
+                              ),
+                              maxLines: null,
+                              expands: true,
+                              textAlignVertical: TextAlignVertical.top,
+                            ),
+                          ),
+
+                          // Info Footer
+                          Padding(
+                            padding: EdgeInsets.all(16.w),
+                            child: Row(
+                              mainAxisAlignment: MainAxisAlignment.end,
+                              children: [
+                                Text(
+                                  "${_contentController.text.length} chars",
+                                  style: TextStyle(
+                                    fontSize: 10.sp,
+                                    color: Theme.of(context)
+                                        .colorScheme
+                                        .onSurface
+                                        .withValues(alpha: 0.4),
+                                    fontWeight: FontWeight.w600,
+                                    letterSpacing: 0.5,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
                   ),
-                  border: InputBorder.none,
-                  focusedBorder: InputBorder.none,
-                  enabledBorder: InputBorder.none,
-                  filled: false,
-                  contentPadding: EdgeInsets.symmetric(horizontal: 24.w),
                 ),
-                maxLines: null,
-                expands: true,
-                textAlignVertical: TextAlignVertical.top,
               ),
             ),
-            _buildMobileToolbar(context, note),
           ],
         ),
       ),
     );
   }
-
-  Widget _buildMobileToolbar(final BuildContext context, final Note note) {
-    final ThemeData theme = Theme.of(context);
-    final ColorScheme colorScheme = theme.colorScheme;
-
-    return Container(
-      padding: EdgeInsets.symmetric(horizontal: 24.w, vertical: 12.h),
-      decoration: BoxDecoration(
-        color: colorScheme.surfaceContainer.withValues(alpha: 0.8),
-        border: Border(
-          top: BorderSide(
-            color: colorScheme.outlineVariant.withValues(alpha: 0.5),
-          ),
-        ),
-      ),
-      child: Row(
-        children: [
-          Text(
-            "${_contentController.text.length} chars",
-            style: theme.textTheme.labelSmall?.copyWith(
-              color: colorScheme.onSurfaceVariant,
-              fontSize: 12.sp,
-            ),
-          ),
-          const Spacer(),
-          if (note.folder != null)
-            Container(
-              padding: EdgeInsets.symmetric(horizontal: 10.w, vertical: 4.h),
-              decoration: BoxDecoration(
-                color: colorScheme.surfaceContainerHighest,
-                borderRadius: BorderRadius.circular(8.r),
-              ),
-              child: Text(
-                note.folder!,
-                style: theme.textTheme.labelSmall?.copyWith(fontSize: 11.sp),
-              ),
-            ),
-        ],
-      ),
-    );
-  }
-
-  Future<void> _showOptionsSheet(final BuildContext context, final Note note) =>
-      showModalBottomSheet(
-        context: context,
-        backgroundColor: Colors.transparent,
-        builder: (final ctx) => Container(
-          decoration: BoxDecoration(
-            color: Theme.of(context).colorScheme.surface,
-            borderRadius: BorderRadius.vertical(top: Radius.circular(24.r)),
-          ),
-          padding: EdgeInsets.all(24.w),
-          child: SafeArea(
-            child: Wrap(
-              children: [
-                ListTile(
-                  leading: Icon(
-                    LucideIcons.trash2,
-                    color: Colors.red,
-                    size: 24.sp,
-                  ),
-                  title: Text(
-                    "Move to Trash",
-                    style: TextStyle(color: Colors.red, fontSize: 16.sp),
-                  ),
-                  onTap: () {
-                    Navigator.pop(ctx);
-                    ref.read(notesProvider.notifier).deleteNote(note.id);
-                    context.pop();
-                  },
-                ),
-                ListTile(
-                  leading: Icon(LucideIcons.info, size: 24.sp),
-                  title: Text("Details", style: TextStyle(fontSize: 16.sp)),
-                  onTap: () {},
-                ),
-              ],
-            ),
-          ),
-        ),
-      );
 }

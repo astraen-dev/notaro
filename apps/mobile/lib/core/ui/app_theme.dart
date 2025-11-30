@@ -2,172 +2,139 @@ import "package:flutter/material.dart";
 import "package:flutter_screenutil/flutter_screenutil.dart";
 import "package:google_fonts/google_fonts.dart";
 
-// ignore_for_file: avoid_redundant_argument_values
+// ignore_for_file: avoid_redundant_argument_values, unused_field
 
 /// Defines the color palettes, text styles, and component themes for the app.
 class AppTheme {
   AppTheme._();
 
-  // --- Color Definitions (Notaro Palettes) ---
-  static const _primary = Color(0xFF5E35B1);
-  static const _primaryDark = Color(0xFFD1C4E9);
-  static const _onPrimaryDark = Color(0xFF311B92);
-  static const _secondary = Color(0xFF7E57C2);
-  static const _secondaryDark = Color(0xFF9575CD);
-  static const _tertiary = Color(0xFF00897B);
-  static const _error = Color(0xFFBA1A1A);
-  static const _errorDark = Color(0xFFFF897D);
-  static const _onErrorDark = Color(0xFF410002);
+  // --- Tailwind Slate Palette ---
+  static const _slate50 = Color(0xFFF8FAFC);
+  static const _slate100 = Color(0xFFF1F5F9); // Light Mode BG Base
+  static const _slate200 = Color(0xFFE2E8F0);
+  static const _slate300 = Color(0xFFCBD5E1);
+  static const _slate400 = Color(0xFF94A3B8);
+  static const _slate500 = Color(0xFF64748B);
+  static const _slate600 = Color(0xFF475569);
+  static const _slate700 = Color(0xFF334155);
+  static const _slate800 = Color(0xFF1E293B);
+  static const _slate900 = Color(0xFF0F172A); // Dark Mode BG Base
+
+  // --- Tailwind Indigo Palette (Accent) ---
+  static const _indigo50 = Color(0xFFEEF2FF);
+  static const _indigo100 = Color(0xFFE0E7FF);
+  static const _indigo500 = Color(0xFF6366F1); // Primary
+  static const _indigo600 = Color(0xFF4F46E5);
+  static const _indigo700 = Color(0xFF4338CA);
+
+  // --- Functional Colors ---
+  static const _error = Color(0xFFEF4444); // Red-500
 
   // --- Light Mode ColorScheme ---
-  static final _lightColorScheme = ColorScheme.fromSeed(
-    seedColor: _primary,
-    primary: _primary,
+  static final _lightColorScheme = ColorScheme.light(
+    primary: _indigo500,
     onPrimary: Colors.white,
-    secondary: _secondary,
+    secondary: _indigo500,
     onSecondary: Colors.white,
-    tertiary: _tertiary,
-    onTertiary: Colors.white,
+    tertiary: _slate500,
     error: _error,
-    onError: Colors.white,
-    brightness: Brightness.light,
-    surface: const Color(0xFFF8FAFC),
-    onSurface: const Color(0xFF171B1E),
-    surfaceContainer: const Color(0xFFFFFFFF),
-    surfaceContainerHighest: const Color(0xFFE0E3E7),
-    onSurfaceVariant: const Color(0xFF536168),
-    outline: const Color(0xFFC4C7C5),
-    outlineVariant: const Color(0xFFEEF0F2),
-    shadow: const Color(0xFF000000),
+    surface: _slate50.withValues(alpha: 0.5),
+    // Transparent for glass
+    onSurface: _slate700,
+    onSurfaceVariant: _slate500,
+    outline: _slate200,
+    outlineVariant: _slate100,
+    shadow: Colors.black.withValues(alpha: 0.1),
   );
 
   // --- Dark Mode ColorScheme ---
-  static final _darkColorScheme = ColorScheme.fromSeed(
-    seedColor: _primary,
-    primary: _primaryDark,
-    onPrimary: _onPrimaryDark,
-    secondary: _secondaryDark,
+  static final _darkColorScheme = ColorScheme.dark(
+    primary: _indigo500,
+    onPrimary: Colors.white,
+    secondary: _indigo500,
     onSecondary: Colors.white,
-    tertiary: _tertiary,
-    onTertiary: Colors.white,
-    error: _errorDark,
-    onError: _onErrorDark,
-    brightness: Brightness.dark,
-    surface: const Color(0xFF101416),
-    onSurface: const Color(0xFFE8E8E8),
-    surfaceContainer: const Color(0xFF1C2226),
-    surfaceContainerHighest: const Color(0xFF2C3238),
-    onSurfaceVariant: const Color(0xFFA8B4BC),
-    outline: const Color(0xFF40484D),
-    outlineVariant: const Color(0xFF282E32),
-    shadow: const Color(0xFF000000),
+    tertiary: _slate400,
+    error: _error,
+    surface: _slate900.withValues(alpha: 0.5),
+    // Transparent for glass
+    onSurface: _slate200,
+    onSurfaceVariant: _slate400,
+    outline: _slate700,
+    outlineVariant: _slate800,
+    shadow: Colors.black.withValues(alpha: 0.3),
   );
 
-  // --- Base TextTheme with Responsive Font sizes ---
-  static TextTheme get _baseTextTheme => TextTheme(
-    displayLarge: TextStyle(fontWeight: FontWeight.w600, fontSize: 64.sp),
-    displayMedium: TextStyle(fontWeight: FontWeight.w600, fontSize: 44.sp),
-    displaySmall: TextStyle(fontWeight: FontWeight.w600, fontSize: 36.sp),
-    headlineLarge: TextStyle(fontWeight: FontWeight.w600, fontSize: 32.sp),
-    headlineMedium: TextStyle(fontWeight: FontWeight.w600, fontSize: 28.sp),
-    headlineSmall: TextStyle(fontWeight: FontWeight.w600, fontSize: 24.sp),
-    titleLarge: TextStyle(fontWeight: FontWeight.w600, fontSize: 20.sp),
-    titleMedium: TextStyle(fontWeight: FontWeight.w600, fontSize: 18.sp),
-    titleSmall: TextStyle(fontWeight: FontWeight.w600, fontSize: 16.sp),
-    bodyLarge: TextStyle(fontSize: 16.sp),
-    bodyMedium: TextStyle(fontSize: 14.sp),
-    bodySmall: TextStyle(fontSize: 12.sp),
-    labelLarge: TextStyle(fontSize: 16.sp),
-    labelMedium: TextStyle(fontSize: 14.sp),
-    labelSmall: TextStyle(fontSize: 12.sp),
-  );
+  // --- Typography (Inter Only) ---
+  static TextTheme _buildTextTheme(final ColorScheme colorScheme) {
+    // Base sizes tailored to match Desktop's utility classes approx.
+    final base = TextTheme(
+      displayLarge: TextStyle(
+        fontSize: 32.sp,
+        fontWeight: FontWeight.bold,
+        letterSpacing: -0.5,
+      ),
+      headlineMedium: TextStyle(
+        fontSize: 24.sp,
+        fontWeight: FontWeight.bold,
+        letterSpacing: -0.5,
+      ),
+      headlineSmall: TextStyle(
+        fontSize: 20.sp,
+        fontWeight: FontWeight.w600,
+        letterSpacing: -0.5,
+      ),
+      titleMedium: TextStyle(fontSize: 16.sp, fontWeight: FontWeight.w600),
+      bodyLarge: TextStyle(fontSize: 16.sp, height: 1.6),
+      bodyMedium: TextStyle(fontSize: 14.sp, height: 1.5),
+      labelSmall: TextStyle(
+        fontSize: 11.sp,
+        fontWeight: FontWeight.w500,
+        letterSpacing: 0.5,
+      ),
+    );
 
-  static TextTheme _buildTextTheme(
-    final TextTheme base,
-    final ColorScheme colorScheme,
-  ) {
-    final TextTheme readexTheme = GoogleFonts.readexProTextTheme(base);
-    final TextTheme interTheme = GoogleFonts.interTextTheme(base);
-    return readexTheme
-        .copyWith(
-          bodyLarge: interTheme.bodyLarge,
-          bodyMedium: interTheme.bodyMedium,
-          bodySmall: interTheme.bodySmall,
-          labelLarge: interTheme.labelLarge,
-          labelMedium: interTheme.labelMedium,
-          labelSmall: interTheme.labelSmall,
-        )
-        .apply(
-          bodyColor: colorScheme.onSurface,
-          displayColor: colorScheme.onSurface,
-        );
+    return GoogleFonts.interTextTheme(base).apply(
+      bodyColor: colorScheme.onSurface,
+      displayColor: colorScheme.onSurface,
+    );
   }
 
-  // --- Main ThemeData Definitions ---
-  // Now functions to ensure Context/ScreenUtil is ready
   static ThemeData light(final BuildContext context) =>
-      _buildThemeData(_lightColorScheme);
-  static ThemeData dark(final BuildContext context) =>
-      _buildThemeData(_darkColorScheme);
+      _buildThemeData(_lightColorScheme, _slate50);
 
-  static ThemeData _buildThemeData(final ColorScheme colorScheme) {
-    final TextTheme textTheme = _buildTextTheme(_baseTextTheme, colorScheme);
+  static ThemeData dark(final BuildContext context) =>
+      _buildThemeData(_darkColorScheme, _slate900);
+
+  static ThemeData _buildThemeData(
+    final ColorScheme colorScheme,
+    final Color scaffoldBg,
+  ) {
+    final TextTheme textTheme = _buildTextTheme(colorScheme);
 
     return ThemeData(
       useMaterial3: true,
       colorScheme: colorScheme,
-      shadowColor: colorScheme.shadow.withValues(alpha: 0.1),
+      scaffoldBackgroundColor: Colors.transparent,
+      // Important for mesh bg
       textTheme: textTheme,
-      scaffoldBackgroundColor: colorScheme.surface,
       appBarTheme: AppBarTheme(
-        backgroundColor: colorScheme.surface,
+        backgroundColor: Colors.transparent,
         scrolledUnderElevation: 0,
         elevation: 0,
         centerTitle: false,
         titleTextStyle: textTheme.headlineMedium,
-        iconTheme: IconThemeData(color: colorScheme.onSurface, size: 24.sp),
-        actionsIconTheme: IconThemeData(
-          color: colorScheme.tertiary,
-          size: 24.sp,
-        ),
-      ),
-      elevatedButtonTheme: ElevatedButtonThemeData(
-        style: ElevatedButton.styleFrom(
-          backgroundColor: colorScheme.primary,
-          foregroundColor: colorScheme.onPrimary,
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(25.r),
-          ),
-          padding: EdgeInsets.symmetric(horizontal: 24.w, vertical: 12.h),
-          textStyle: textTheme.titleSmall?.copyWith(
-            fontWeight: FontWeight.bold,
-          ),
-        ),
+        iconTheme: IconThemeData(color: colorScheme.onSurfaceVariant),
       ),
       inputDecorationTheme: InputDecorationTheme(
-        filled: true,
-        fillColor: colorScheme.surfaceContainerLowest,
-        contentPadding: EdgeInsets.all(16.w),
-        border: OutlineInputBorder(
-          borderSide: BorderSide(color: colorScheme.outline),
-          borderRadius: BorderRadius.circular(12.r),
-        ),
-        enabledBorder: OutlineInputBorder(
-          borderSide: BorderSide(color: colorScheme.outline),
-          borderRadius: BorderRadius.circular(12.r),
-        ),
-        focusedBorder: OutlineInputBorder(
-          borderSide: BorderSide(color: colorScheme.primary, width: 2.w),
-          borderRadius: BorderRadius.circular(12.r),
+        filled: false,
+        border: InputBorder.none,
+        hintStyle: TextStyle(
+          color: colorScheme.onSurfaceVariant.withValues(alpha: 0.5),
         ),
       ),
-      cardTheme: CardThemeData(
-        elevation: 0,
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(16.r),
-          side: const BorderSide(color: Colors.transparent, width: 0),
-        ),
-        color: colorScheme.surfaceContainer,
+      iconTheme: IconThemeData(
+        color: colorScheme.onSurfaceVariant,
+        size: 20.sp,
       ),
     );
   }
