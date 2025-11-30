@@ -15,7 +15,7 @@ T _$identity<T>(T value) => value;
 /// @nodoc
 mixin _$UserPreferences {
 
- AppThemeMode get themeMode; double get anomalyDeviationThreshold;
+ AppThemeMode get themeMode; double get accentHue; AppFontFamily get fontFamily; double get anomalyDeviationThreshold;
 /// Create a copy of UserPreferences
 /// with the given fields replaced by the non-null parameter values.
 @JsonKey(includeFromJson: false, includeToJson: false)
@@ -28,16 +28,16 @@ $UserPreferencesCopyWith<UserPreferences> get copyWith => _$UserPreferencesCopyW
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is UserPreferences&&(identical(other.themeMode, themeMode) || other.themeMode == themeMode)&&(identical(other.anomalyDeviationThreshold, anomalyDeviationThreshold) || other.anomalyDeviationThreshold == anomalyDeviationThreshold));
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is UserPreferences&&(identical(other.themeMode, themeMode) || other.themeMode == themeMode)&&(identical(other.accentHue, accentHue) || other.accentHue == accentHue)&&(identical(other.fontFamily, fontFamily) || other.fontFamily == fontFamily)&&(identical(other.anomalyDeviationThreshold, anomalyDeviationThreshold) || other.anomalyDeviationThreshold == anomalyDeviationThreshold));
 }
 
 @JsonKey(includeFromJson: false, includeToJson: false)
 @override
-int get hashCode => Object.hash(runtimeType,themeMode,anomalyDeviationThreshold);
+int get hashCode => Object.hash(runtimeType,themeMode,accentHue,fontFamily,anomalyDeviationThreshold);
 
 @override
 String toString() {
-  return 'UserPreferences(themeMode: $themeMode, anomalyDeviationThreshold: $anomalyDeviationThreshold)';
+  return 'UserPreferences(themeMode: $themeMode, accentHue: $accentHue, fontFamily: $fontFamily, anomalyDeviationThreshold: $anomalyDeviationThreshold)';
 }
 
 
@@ -48,7 +48,7 @@ abstract mixin class $UserPreferencesCopyWith<$Res>  {
   factory $UserPreferencesCopyWith(UserPreferences value, $Res Function(UserPreferences) _then) = _$UserPreferencesCopyWithImpl;
 @useResult
 $Res call({
- AppThemeMode themeMode, double anomalyDeviationThreshold
+ AppThemeMode themeMode, double accentHue, AppFontFamily fontFamily, double anomalyDeviationThreshold
 });
 
 
@@ -65,10 +65,12 @@ class _$UserPreferencesCopyWithImpl<$Res>
 
 /// Create a copy of UserPreferences
 /// with the given fields replaced by the non-null parameter values.
-@pragma('vm:prefer-inline') @override $Res call({Object? themeMode = null,Object? anomalyDeviationThreshold = null,}) {
+@pragma('vm:prefer-inline') @override $Res call({Object? themeMode = null,Object? accentHue = null,Object? fontFamily = null,Object? anomalyDeviationThreshold = null,}) {
   return _then(_self.copyWith(
 themeMode: null == themeMode ? _self.themeMode : themeMode // ignore: cast_nullable_to_non_nullable
-as AppThemeMode,anomalyDeviationThreshold: null == anomalyDeviationThreshold ? _self.anomalyDeviationThreshold : anomalyDeviationThreshold // ignore: cast_nullable_to_non_nullable
+as AppThemeMode,accentHue: null == accentHue ? _self.accentHue : accentHue // ignore: cast_nullable_to_non_nullable
+as double,fontFamily: null == fontFamily ? _self.fontFamily : fontFamily // ignore: cast_nullable_to_non_nullable
+as AppFontFamily,anomalyDeviationThreshold: null == anomalyDeviationThreshold ? _self.anomalyDeviationThreshold : anomalyDeviationThreshold // ignore: cast_nullable_to_non_nullable
 as double,
   ));
 }
@@ -154,10 +156,10 @@ return $default(_that);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( AppThemeMode themeMode,  double anomalyDeviationThreshold)?  $default,{required TResult orElse(),}) {final _that = this;
+@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( AppThemeMode themeMode,  double accentHue,  AppFontFamily fontFamily,  double anomalyDeviationThreshold)?  $default,{required TResult orElse(),}) {final _that = this;
 switch (_that) {
 case _UserPreferences() when $default != null:
-return $default(_that.themeMode,_that.anomalyDeviationThreshold);case _:
+return $default(_that.themeMode,_that.accentHue,_that.fontFamily,_that.anomalyDeviationThreshold);case _:
   return orElse();
 
 }
@@ -175,10 +177,10 @@ return $default(_that.themeMode,_that.anomalyDeviationThreshold);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( AppThemeMode themeMode,  double anomalyDeviationThreshold)  $default,) {final _that = this;
+@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( AppThemeMode themeMode,  double accentHue,  AppFontFamily fontFamily,  double anomalyDeviationThreshold)  $default,) {final _that = this;
 switch (_that) {
 case _UserPreferences():
-return $default(_that.themeMode,_that.anomalyDeviationThreshold);case _:
+return $default(_that.themeMode,_that.accentHue,_that.fontFamily,_that.anomalyDeviationThreshold);case _:
   throw StateError('Unexpected subclass');
 
 }
@@ -195,10 +197,10 @@ return $default(_that.themeMode,_that.anomalyDeviationThreshold);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( AppThemeMode themeMode,  double anomalyDeviationThreshold)?  $default,) {final _that = this;
+@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( AppThemeMode themeMode,  double accentHue,  AppFontFamily fontFamily,  double anomalyDeviationThreshold)?  $default,) {final _that = this;
 switch (_that) {
 case _UserPreferences() when $default != null:
-return $default(_that.themeMode,_that.anomalyDeviationThreshold);case _:
+return $default(_that.themeMode,_that.accentHue,_that.fontFamily,_that.anomalyDeviationThreshold);case _:
   return null;
 
 }
@@ -210,10 +212,12 @@ return $default(_that.themeMode,_that.anomalyDeviationThreshold);case _:
 @JsonSerializable()
 
 class _UserPreferences implements UserPreferences {
-  const _UserPreferences({this.themeMode = AppThemeMode.system, this.anomalyDeviationThreshold = 50.0});
+  const _UserPreferences({this.themeMode = AppThemeMode.system, this.accentHue = 250.0, this.fontFamily = AppFontFamily.sans, this.anomalyDeviationThreshold = 50.0});
   factory _UserPreferences.fromJson(Map<String, dynamic> json) => _$UserPreferencesFromJson(json);
 
 @override@JsonKey() final  AppThemeMode themeMode;
+@override@JsonKey() final  double accentHue;
+@override@JsonKey() final  AppFontFamily fontFamily;
 @override@JsonKey() final  double anomalyDeviationThreshold;
 
 /// Create a copy of UserPreferences
@@ -229,16 +233,16 @@ Map<String, dynamic> toJson() {
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is _UserPreferences&&(identical(other.themeMode, themeMode) || other.themeMode == themeMode)&&(identical(other.anomalyDeviationThreshold, anomalyDeviationThreshold) || other.anomalyDeviationThreshold == anomalyDeviationThreshold));
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is _UserPreferences&&(identical(other.themeMode, themeMode) || other.themeMode == themeMode)&&(identical(other.accentHue, accentHue) || other.accentHue == accentHue)&&(identical(other.fontFamily, fontFamily) || other.fontFamily == fontFamily)&&(identical(other.anomalyDeviationThreshold, anomalyDeviationThreshold) || other.anomalyDeviationThreshold == anomalyDeviationThreshold));
 }
 
 @JsonKey(includeFromJson: false, includeToJson: false)
 @override
-int get hashCode => Object.hash(runtimeType,themeMode,anomalyDeviationThreshold);
+int get hashCode => Object.hash(runtimeType,themeMode,accentHue,fontFamily,anomalyDeviationThreshold);
 
 @override
 String toString() {
-  return 'UserPreferences(themeMode: $themeMode, anomalyDeviationThreshold: $anomalyDeviationThreshold)';
+  return 'UserPreferences(themeMode: $themeMode, accentHue: $accentHue, fontFamily: $fontFamily, anomalyDeviationThreshold: $anomalyDeviationThreshold)';
 }
 
 
@@ -249,7 +253,7 @@ abstract mixin class _$UserPreferencesCopyWith<$Res> implements $UserPreferences
   factory _$UserPreferencesCopyWith(_UserPreferences value, $Res Function(_UserPreferences) _then) = __$UserPreferencesCopyWithImpl;
 @override @useResult
 $Res call({
- AppThemeMode themeMode, double anomalyDeviationThreshold
+ AppThemeMode themeMode, double accentHue, AppFontFamily fontFamily, double anomalyDeviationThreshold
 });
 
 
@@ -266,10 +270,12 @@ class __$UserPreferencesCopyWithImpl<$Res>
 
 /// Create a copy of UserPreferences
 /// with the given fields replaced by the non-null parameter values.
-@override @pragma('vm:prefer-inline') $Res call({Object? themeMode = null,Object? anomalyDeviationThreshold = null,}) {
+@override @pragma('vm:prefer-inline') $Res call({Object? themeMode = null,Object? accentHue = null,Object? fontFamily = null,Object? anomalyDeviationThreshold = null,}) {
   return _then(_UserPreferences(
 themeMode: null == themeMode ? _self.themeMode : themeMode // ignore: cast_nullable_to_non_nullable
-as AppThemeMode,anomalyDeviationThreshold: null == anomalyDeviationThreshold ? _self.anomalyDeviationThreshold : anomalyDeviationThreshold // ignore: cast_nullable_to_non_nullable
+as AppThemeMode,accentHue: null == accentHue ? _self.accentHue : accentHue // ignore: cast_nullable_to_non_nullable
+as double,fontFamily: null == fontFamily ? _self.fontFamily : fontFamily // ignore: cast_nullable_to_non_nullable
+as AppFontFamily,anomalyDeviationThreshold: null == anomalyDeviationThreshold ? _self.anomalyDeviationThreshold : anomalyDeviationThreshold // ignore: cast_nullable_to_non_nullable
 as double,
   ));
 }

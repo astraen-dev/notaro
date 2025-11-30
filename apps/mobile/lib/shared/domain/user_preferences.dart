@@ -6,10 +6,14 @@ part "user_preferences.g.dart";
 
 enum AppThemeMode { light, dark, system }
 
+enum AppFontFamily { sans, serif, mono }
+
 @freezed
 abstract class UserPreferences with _$UserPreferences {
   const factory UserPreferences({
     @Default(AppThemeMode.system) final AppThemeMode themeMode,
+    @Default(250.0) final double accentHue,
+    @Default(AppFontFamily.sans) final AppFontFamily fontFamily,
     @Default(50.0) final double anomalyDeviationThreshold,
   }) = _UserPreferences;
 

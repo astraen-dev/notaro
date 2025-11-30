@@ -388,10 +388,10 @@ packages:
     dependency: "direct dev"
     description:
       name: go_router_builder
-      sha256: e0646fb5586e04e1df92678f539059f38e4314848f06dd4f3cd87fed434e16b5
+      sha256: "07215ebe9d458cc2426f271a6443dbe5ee35cc313088064e013378614453f50a"
       url: "https://pub.dev"
     source: hosted
-    version: "4.1.1"
+    version: "4.1.2"
   google_fonts:
     dependency: "direct main"
     description:
@@ -576,14 +576,6 @@ packages:
       url: "https://pub.dev"
     source: hosted
     version: "2.0.2"
-  objective_c:
-    dependency: transitive
-    description:
-      name: objective_c
-      sha256: "1f81ed9e41909d44162d7ec8663b2c647c202317cc0b56d3d56f6a13146a0b64"
-      url: "https://pub.dev"
-    source: hosted
-    version: "9.1.0"
   package_config:
     dependency: transitive
     description:
@@ -620,10 +612,10 @@ packages:
     dependency: transitive
     description:
       name: path_provider_foundation
-      sha256: "6192e477f34018ef1ea790c56fffc7302e3bc3efede9e798b934c252c8c105ba"
+      sha256: "6d13aece7b3f5c5a9731eaf553ff9dcbc2eff41087fd2df587fd0fed9a3eb0c4"
       url: "https://pub.dev"
     source: hosted
-    version: "2.5.0"
+    version: "2.5.1"
   path_provider_linux:
     dependency: transitive
     description:

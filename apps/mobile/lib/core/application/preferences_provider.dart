@@ -32,4 +32,15 @@ class UserPreferencesNotifier extends _$UserPreferencesNotifier {
     final UserPreferences currentState = await future;
     await _updatePreferences(currentState.copyWith(themeMode: mode));
   }
+
+  Future<void> setAccentHue(final double hue) async {
+    final UserPreferences currentState = await future;
+    // Debouncing could be handled in UI, but direct update is fine for local prefs
+    await _updatePreferences(currentState.copyWith(accentHue: hue));
+  }
+
+  Future<void> setFontFamily(final AppFontFamily family) async {
+    final UserPreferences currentState = await future;
+    await _updatePreferences(currentState.copyWith(fontFamily: family));
+  }
 }
