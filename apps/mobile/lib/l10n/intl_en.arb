@@ -1,0 +1,92 @@
+{
+  "@@locale": "en",
+  "appName": "Notaro",
+  "@appName": {
+    "description": "The name of the application."
+  },
+  "editorCharCount": "{count} chars",
+  "@editorCharCount": {
+    "description": "Label displayed at the bottom of the editor showing the total character count.",
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "editorStartTyping": "Start typing...",
+  "@editorStartTyping": {
+    "description": "Hint text displayed in the main editor content area when empty."
+  },
+  "filterAll": "All",
+  "@filterAll": {
+    "description": "Label for the filter chip that shows all non-deleted notes."
+  },
+  "filterPinned": "Pinned",
+  "@filterPinned": {
+    "description": "Label for the filter chip that shows only pinned notes."
+  },
+  "filterTrash": "Trash",
+  "@filterTrash": {
+    "description": "Label for the filter chip that shows deleted notes."
+  },
+  "fontMono": "Mono",
+  "@fontMono": {
+    "description": "Label for the Monospace font family option."
+  },
+  "fontSans": "Sans Serif",
+  "@fontSans": {
+    "description": "Label for the Sans-Serif font family option."
+  },
+  "fontSerif": "Serif",
+  "@fontSerif": {
+    "description": "Label for the Serif font family option."
+  },
+  "noMatches": "No matches found",
+  "@noMatches": {
+    "description": "Message displayed when a search query returns no results."
+  },
+  "noNotes": "No notes here",
+  "@noNotes": {
+    "description": "Message displayed in the center of the screen when the note list is empty."
+  },
+  "noteNoContent": "No additional text",
+  "@noteNoContent": {
+    "description": "Placeholder text displayed in the note preview card when the note body is empty."
+  },
+  "noteUntitled": "Untitled Note",
+  "@noteUntitled": {
+    "description": "Default title displayed for a note that has no user-defined title."
+  },
+  "searchHint": "Search notes...",
+  "@searchHint": {
+    "description": "Placeholder text displayed inside the search bar."
+  },
+  "settingsAccentColor": "ACCENT COLOR",
+  "@settingsAccentColor": {
+    "description": "Section header for the accent color slider."
+  },
+  "settingsAppearance": "Appearance",
+  "@settingsAppearance": {
+    "description": "Title text displayed at the top of the Settings modal."
+  },
+  "settingsTheme": "THEME",
+  "@settingsTheme": {
+    "description": "Section header for the theme selection controls."
+  },
+  "settingsTypography": "TYPOGRAPHY",
+  "@settingsTypography": {
+    "description": "Section header for the font family selection controls."
+  },
+  "themeDark": "Dark",
+  "@themeDark": {
+    "description": "Label for the dark theme option in the settings."
+  },
+  "themeLight": "Light",
+  "@themeLight": {
+    "description": "Label for the light theme option in the settings."
+  },
+  "themeSystem": "System",
+  "@themeSystem": {
+    "description": "Label for the system-default theme option in the settings."
+  }
+}

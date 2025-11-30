@@ -3,6 +3,8 @@
   "private": true,
   "scripts": {
     "lint": "flutter analyze",
-    "format": "dart format ."
+    "format": "dart format .",
+    "gen-l10n": "dart run intl_utils:generate",
+    "gen-licenses": "dart run dart_pubspec_licenses:generate"
   }
 }

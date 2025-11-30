@@ -9,6 +9,8 @@ analyzer:
     - '**/*.g.dart'
     - '**/*.freezed.dart'
     - 'lib/oss_licenses.dart'
+    - 'lib/generated/intl/**'
+    - 'lib/generated/l10n.dart'
 
 linter:
   rules:

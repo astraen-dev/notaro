@@ -7,6 +7,7 @@ import "package:flutter_screenutil/flutter_screenutil.dart";
 import "package:lucide_icons_flutter/lucide_icons.dart";
 import "package:notaro_mobile/core/application/preferences_provider.dart";
 import "package:notaro_mobile/core/ui/theme_provider.dart";
+import "package:notaro_mobile/generated/l10n.dart";
 import "package:notaro_mobile/shared/domain/user_preferences.dart";
 
 class SettingsModal extends ConsumerWidget {
@@ -62,7 +63,7 @@ class SettingsModal extends ConsumerWidget {
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
                   Text(
-                    "Appearance",
+                    S.of(context).settingsAppearance,
                     style: Theme.of(context).textTheme.headlineSmall?.copyWith(
                       fontSize: 20.sp,
                       fontWeight: FontWeight.bold,
@@ -77,7 +78,7 @@ class SettingsModal extends ConsumerWidget {
               SizedBox(height: 24.h),
 
               // --- Theme Selector ---
-              const _SectionLabel(label: "THEME"),
+              _SectionLabel(label: S.of(context).settingsTheme),
               SizedBox(height: 12.h),
 
               // Theme Selector Buttons (Segmented Control style)
@@ -92,7 +93,7 @@ class SettingsModal extends ConsumerWidget {
                 child: Row(
                   children: [
                     _ThemeOption(
-                      label: "Light",
+                      label: S.of(context).themeLight,
                       icon: LucideIcons.sun,
                       isActive: themeMode == ThemeMode.light,
                       onTap: () => ref
@@ -100,7 +101,7 @@ class SettingsModal extends ConsumerWidget {
                           .setThemeMode(ThemeMode.light),
                     ),
                     _ThemeOption(
-                      label: "Dark",
+                      label: S.of(context).themeDark,
                       icon: LucideIcons.moon,
                       isActive: themeMode == ThemeMode.dark,
                       onTap: () => ref
@@ -108,7 +109,7 @@ class SettingsModal extends ConsumerWidget {
                           .setThemeMode(ThemeMode.dark),
                     ),
                     _ThemeOption(
-                      label: "System",
+                      label: S.of(context).themeSystem,
                       icon: LucideIcons.monitor,
                       isActive: themeMode == ThemeMode.system,
                       onTap: () => ref
@@ -124,7 +125,7 @@ class SettingsModal extends ConsumerWidget {
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
-                  const _SectionLabel(label: "ACCENT COLOR"),
+                  _SectionLabel(label: S.of(context).settingsAccentColor),
                   // Live Preview Dot
                   Container(
                     width: 16.w,
@@ -210,12 +211,12 @@ class SettingsModal extends ConsumerWidget {
               SizedBox(height: 24.h),
 
               // --- Typography Selector ---
-              const _SectionLabel(label: "TYPOGRAPHY"),
+              _SectionLabel(label: S.of(context).settingsTypography),
               SizedBox(height: 12.h),
               Row(
                 children: [
                   _FontOption(
-                    label: "Sans Serif",
+                    label: S.of(context).fontSans,
                     fontFamily: AppFontFamily.sans,
                     current: prefs.fontFamily,
                     onTap: () => ref
@@ -224,7 +225,7 @@ class SettingsModal extends ConsumerWidget {
                   ),
                   SizedBox(width: 8.w),
                   _FontOption(
-                    label: "Serif",
+                    label: S.of(context).fontSerif,
                     fontFamily: AppFontFamily.serif,
                     current: prefs.fontFamily,
                     onTap: () => ref
@@ -233,7 +234,7 @@ class SettingsModal extends ConsumerWidget {
                   ),
                   SizedBox(width: 8.w),
                   _FontOption(
-                    label: "Mono",
+                    label: S.of(context).fontMono,
                     fontFamily: AppFontFamily.mono,
                     current: prefs.fontFamily,
                     onTap: () => ref

@@ -1,9 +1,11 @@
 import "dart:ui";
+
 import "package:flutter/material.dart";
 import "package:flutter_screenutil/flutter_screenutil.dart";
 import "package:intl/intl.dart";
 import "package:lucide_icons_flutter/lucide_icons.dart";
 import "package:notaro_mobile/features/notes/domain/note.dart";
+import "package:notaro_mobile/generated/l10n.dart";
 
 class NoteCard extends StatelessWidget {
   const NoteCard({required this.note, required this.onTap, super.key});
@@ -78,7 +80,7 @@ class NoteCard extends StatelessWidget {
                               Expanded(
                                 child: Text(
                                   note.title.isEmpty
-                                      ? "Untitled Note"
+                                      ? S.of(context).noteUntitled
                                       : note.title,
                                   style: TextStyle(
                                     fontWeight: FontWeight.w600,
@@ -110,7 +112,7 @@ class NoteCard extends StatelessWidget {
                     SizedBox(height: 4.h),
                     Text(
                       note.content.isEmpty
-                          ? "No additional text"
+                          ? S.of(context).noteNoContent
                           : note.content,
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,

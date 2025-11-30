@@ -40,8 +40,9 @@
       "sh -c 'cargo clippy --workspace --fix --allow-dirty --allow-staged -- -D warnings'"
     ],
     "apps/mobile/**/*.dart": [
-      "sh -c 'dart format .'",
-      "sh -c 'flutter analyze'"
+      "sh -c 'cd apps/mobile && pnpm gen-l10n && pnpm gen-licenses && git add lib/oss_licenses.dart lib/l10n/'",
+      "sh -c 'cd apps/mobile && dart format .'",
+      "sh -c 'cd apps/mobile && flutter analyze'"
     ]
   }
 }

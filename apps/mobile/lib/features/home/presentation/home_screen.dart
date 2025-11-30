@@ -10,6 +10,7 @@ import "package:notaro_mobile/features/home/presentation/widgets/note_card.dart"
 import "package:notaro_mobile/features/notes/application/notes_provider.dart";
 import "package:notaro_mobile/features/notes/domain/note.dart";
 import "package:notaro_mobile/features/settings/presentation/settings_modal.dart";
+import "package:notaro_mobile/generated/l10n.dart";
 import "package:notaro_mobile/shared/widgets/mesh_gradient_scaffold.dart";
 
 class HomeScreen extends ConsumerStatefulWidget {
@@ -131,7 +132,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                 ),
                 SizedBox(width: 8.w),
                 Text(
-                  "Notaro",
+                  S.of(context).appName,
                   style: TextStyle(
                     fontWeight: FontWeight.w800,
                     letterSpacing: -1.sp,
@@ -193,7 +194,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                           setState(() => _searchQuery = val),
                       style: TextStyle(fontSize: 14.sp),
                       decoration: InputDecoration(
-                        hintText: "Search notes...",
+                        hintText: S.of(context).searchHint,
                         hintStyle: TextStyle(
                           color: colorScheme.onSurfaceVariant.withValues(
                             alpha: 0.5,
@@ -235,20 +236,20 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
               child: Row(
                 children: [
                   _FilterChip(
-                    label: "All",
+                    label: S.of(context).filterAll,
                     isSelected: _selectedFilter == "all",
                     onTap: () => setState(() => _selectedFilter = "all"),
                   ),
                   SizedBox(width: 8.w),
                   _FilterChip(
-                    label: "Pinned",
+                    label: S.of(context).filterPinned,
                     icon: LucideIcons.pin,
                     isSelected: _selectedFilter == "pinned",
                     onTap: () => setState(() => _selectedFilter = "pinned"),
                   ),
                   SizedBox(width: 8.w),
                   _FilterChip(
-                    label: "Trash",
+                    label: S.of(context).filterTrash,
                     icon: LucideIcons.trash2,
                     isSelected: _selectedFilter == "trash",
                     onTap: () => setState(() => _selectedFilter = "trash"),
@@ -298,8 +299,8 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                     SizedBox(height: 16.h),
                     Text(
                       _searchQuery.isNotEmpty
-                          ? "No matches found"
-                          : "No notes here",
+                          ? S.of(context).noMatches
+                          : S.of(context).noNotes,
                       style: Theme.of(context).textTheme.bodyMedium?.copyWith(
                         color: colorScheme.onSurfaceVariant.withValues(
                           alpha: 0.7,

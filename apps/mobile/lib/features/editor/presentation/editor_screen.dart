@@ -6,6 +6,7 @@ import "package:go_router/go_router.dart";
 import "package:lucide_icons_flutter/lucide_icons.dart";
 import "package:notaro_mobile/features/notes/application/notes_provider.dart";
 import "package:notaro_mobile/features/notes/domain/note.dart";
+import "package:notaro_mobile/generated/l10n.dart";
 import "package:notaro_mobile/shared/widgets/mesh_gradient_scaffold.dart";
 
 class EditorScreen extends ConsumerStatefulWidget {
@@ -163,7 +164,7 @@ class _EditorScreenState extends ConsumerState<EditorScreen> {
                                 height: 1.2,
                               ),
                               decoration: InputDecoration(
-                                hintText: "Untitled Note",
+                                hintText: S.of(context).noteUntitled,
                                 hintStyle: TextStyle(
                                   color: Theme.of(context).colorScheme.onSurface
                                       .withValues(alpha: 0.3),
@@ -189,7 +190,7 @@ class _EditorScreenState extends ConsumerState<EditorScreen> {
                                 ).colorScheme.onSurface.withValues(alpha: 0.9),
                               ),
                               decoration: InputDecoration(
-                                hintText: "Start typing...",
+                                hintText: S.of(context).editorStartTyping,
                                 hintStyle: TextStyle(
                                   color: Theme.of(context)
                                       .colorScheme
@@ -214,7 +215,11 @@ class _EditorScreenState extends ConsumerState<EditorScreen> {
                               mainAxisAlignment: MainAxisAlignment.end,
                               children: [
                                 Text(
-                                  "${_contentController.text.length} chars",
+                                  S
+                                      .of(context)
+                                      .editorCharCount(
+                                        _contentController.text.length,
+                                      ),
                                   style: TextStyle(
                                     fontSize: 10.sp,
                                     color: Theme.of(context)
