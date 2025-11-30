@@ -275,7 +275,7 @@
 
 <section
   bind:this={editorSectionRef}
-  class="relative flex w-full flex-1 flex-col overflow-hidden rounded-2xl border border-white/60 bg-white/60 shadow-2xl backdrop-blur-2xl transition-all duration-300"
+  class="relative flex w-full flex-1 flex-col overflow-hidden rounded-2xl border border-white/60 bg-white/60 shadow-2xl backdrop-blur-2xl transition-all duration-300 dark:border-white/10 dark:bg-slate-900/70"
 >
   {#if noteStore.selectedNote}
     <!-- Trash Banner -->
@@ -291,15 +291,15 @@
     <!-- Toolbar Header -->
     <header
       data-tauri-drag-region
-      class="flex min-h-[3.5rem] items-center justify-between gap-4 border-b border-slate-200/30 bg-white/10 px-4 transition-opacity duration-500
+      class="flex min-h-[3.5rem] items-center justify-between gap-4 border-b border-slate-200/30 bg-white/10 px-4 transition-opacity duration-500 dark:border-white/5 dark:bg-white/5
       {isZenMode ? 'opacity-0 hover:opacity-100' : 'opacity-100'}"
     >
       <div class="flex items-center gap-4">
         <button
           onclick={() => (isSidebarOpen = !isSidebarOpen)}
-          class="rounded-lg p-2 text-slate-400 transition-all hover:bg-white/50 hover:text-slate-600 {isSidebarOpen
+          class="rounded-lg p-2 text-slate-400 transition-all hover:bg-white/50 hover:text-slate-600 dark:text-slate-300 dark:hover:bg-white/10 dark:hover:text-white {isSidebarOpen
             ? 'opacity-50'
-            : 'text-indigo-500 opacity-100'}"
+            : 'text-indigo-500 opacity-100 dark:text-indigo-400'}"
           title={isSidebarOpen ? 'Collapse Sidebar' : 'Expand Sidebar'}
         >
           <PanelLeft size={18} />
@@ -307,27 +307,32 @@
 
         {#if !noteStore.selectedNote.is_deleted && !isCompactToolbar}
           <div class="flex items-center gap-2">
+            <!-- Pin Button -->
             <button
               onclick={togglePin}
-              class="rounded-lg p-1.5 transition-all hover:bg-white/50 active:scale-90
+              class="rounded-lg p-1.5 transition-all hover:bg-white/50 active:scale-90 dark:hover:bg-white/10
                     {localPinned
-                ? 'text-indigo-500'
-                : 'text-slate-400 hover:text-slate-600'}"
+                ? 'text-indigo-500 dark:text-indigo-400'
+                : 'text-slate-400 hover:text-slate-600 dark:text-slate-300 dark:hover:text-white'}"
               title={localPinned ? 'Unpin Note' : 'Pin Note'}
             >
               <Pin size={16} class={localPinned ? 'fill-current' : ''} />
             </button>
 
+            <!-- Folder Input -->
             <div
-              class="flex items-center gap-1.5 rounded-lg border border-transparent bg-slate-100/50 px-2.5 py-1.5 transition-all focus-within:border-indigo-200/50 focus-within:bg-white/80 hover:bg-white/50"
+              class="flex items-center gap-1.5 rounded-lg border border-transparent bg-slate-100/50 px-2.5 py-1.5 transition-all focus-within:border-indigo-200/50 focus-within:bg-white/80 hover:bg-white/50 dark:bg-white/5 dark:focus-within:border-indigo-400/30 dark:focus-within:bg-white/10 dark:hover:bg-white/10"
             >
-              <FolderOpen size={14} class="text-slate-400" />
+              <FolderOpen
+                size={14}
+                class="text-slate-400 dark:text-slate-300"
+              />
               <input
                 type="text"
                 value={localFolder || ''}
                 onchange={updateFolder}
                 placeholder="No Folder"
-                class="w-24 bg-transparent text-xs font-medium text-slate-600 outline-none placeholder:text-slate-400"
+                class="w-24 bg-transparent text-xs font-medium text-slate-600 outline-none placeholder:text-slate-400 dark:text-slate-200 dark:placeholder:text-slate-400"
               />
             </div>
           </div>
@@ -341,10 +346,10 @@
             <button
               onclick={performUndo}
               disabled={!history.canUndo}
-              class="rounded-lg p-2 transition-all hover:bg-white/50
+              class="rounded-lg p-2 transition-all hover:bg-white/50 dark:hover:bg-white/10
             {history.canUndo
-                ? 'cursor-pointer text-slate-600 hover:text-slate-900'
-                : 'cursor-not-allowed text-slate-300'}"
+                ? 'cursor-pointer text-slate-600 hover:text-slate-900 dark:text-slate-300 dark:hover:text-white'
+                : 'cursor-not-allowed text-slate-300 dark:text-slate-500'}"
               title="Undo (Ctrl+Z)"
             >
               <Undo2 size={18} />
@@ -353,38 +358,41 @@
             <button
               onclick={performRedo}
               disabled={!history.canRedo}
-              class="rounded-lg p-2 transition-all hover:bg-white/50
+              class="rounded-lg p-2 transition-all hover:bg-white/50 dark:hover:bg-white/10
             {history.canRedo
-                ? 'cursor-pointer text-slate-600 hover:text-slate-900'
-                : 'cursor-not-allowed text-slate-300'}"
+                ? 'cursor-pointer text-slate-600 hover:text-slate-900 dark:text-slate-300 dark:hover:text-white'
+                : 'cursor-not-allowed text-slate-300 dark:text-slate-500'}"
               title="Redo (Ctrl+Y)"
             >
               <Redo2 size={18} />
             </button>
 
-            <div class="mx-1 h-4 w-px bg-slate-300/30"></div>
+            <div class="mx-1 h-4 w-px bg-slate-300/30 dark:bg-white/10"></div>
 
             <button
               onclick={copyToClipboard}
-              class="group flex items-center gap-1.5 rounded-lg px-2 py-1.5 text-xs font-medium text-slate-500 transition-all hover:bg-white/50 hover:text-slate-700"
+              class="group flex items-center gap-1.5 rounded-lg px-2 py-1.5 text-xs font-medium text-slate-500 transition-all hover:bg-white/50 hover:text-slate-700 dark:text-slate-300 dark:hover:bg-white/10 dark:hover:text-white"
               title="Copy to Clipboard"
             >
               {#if isCopied}
                 <Check size={14} class="text-emerald-500" />
-                <span class="text-emerald-600">Copied</span>
+                <span class="text-emerald-600 dark:text-emerald-400"
+                  >Copied</span
+                >
               {:else}
                 <Copy size={14} />
                 <span class="hidden sm:inline">Copy</span>
               {/if}
             </button>
 
-            <div class="mx-1 h-4 w-px bg-slate-300/30"></div>
+            <div class="mx-1 h-4 w-px bg-slate-300/30 dark:bg-white/10"></div>
           {:else}
+            <!-- Restore Button -->
             <button
               onclick={() =>
                 noteStore.selectedNote &&
                 noteStore.restore(noteStore.selectedNote.id)}
-              class="group flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-xs font-medium text-slate-500 transition-all hover:bg-white/50 hover:text-emerald-600"
+              class="group flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-xs font-medium text-slate-500 transition-all hover:bg-white/50 hover:text-emerald-600 dark:text-slate-300 dark:hover:bg-white/10 dark:hover:text-emerald-400"
             >
               <RotateCcw size={14} />
               <span class="hidden sm:inline">Restore</span>
@@ -395,13 +403,13 @@
             onclick={() =>
               noteStore.selectedNote &&
               noteStore.delete(noteStore.selectedNote.id)}
-            class="rounded-lg p-2 text-slate-400 transition-all hover:bg-red-50 hover:text-red-500"
+            class="rounded-lg p-2 text-slate-400 transition-all hover:bg-red-50 hover:text-red-500 dark:text-slate-400 dark:hover:bg-red-900/20 dark:hover:text-red-400"
             title={noteStore.selectedNote.is_deleted
               ? 'Delete Permanently'
               : 'Move to Trash'}
           >
             {#if noteStore.selectedNote.is_deleted}
-              <Trash2 size={18} class="stroke-red-500" />
+              <Trash2 size={18} class="stroke-red-500 dark:stroke-red-400" />
             {:else}
               <Trash2 size={18} />
             {/if}
@@ -409,10 +417,10 @@
         {/if}
 
         <!-- Zen Mode Toggle -->
-        <div class="mx-1 h-4 w-px bg-slate-300/30"></div>
+        <div class="mx-1 h-4 w-px bg-slate-300/30 dark:bg-white/10"></div>
         <button
           onclick={toggleZenMode}
-          class="rounded-lg p-2 text-slate-400 transition-all hover:bg-indigo-50 hover:text-indigo-500"
+          class="rounded-lg p-2 text-slate-400 transition-all hover:bg-indigo-50 hover:text-indigo-500 dark:text-slate-300 dark:hover:bg-indigo-500/20 dark:hover:text-indigo-300"
           title={isZenMode ? 'Exit Zen Mode' : 'Enter Zen Mode'}
         >
           {#if isZenMode}
@@ -427,7 +435,7 @@
           <div class="flex items-center">
             <button
               onclick={() => (isMobileMenuOpen = !isMobileMenuOpen)}
-              class="rounded-lg p-2 text-slate-500 transition-all hover:bg-white/50 hover:text-indigo-600"
+              class="rounded-lg p-2 text-slate-500 transition-all hover:bg-white/50 hover:text-indigo-600 dark:text-slate-300 dark:hover:bg-white/10 dark:hover:text-indigo-400"
             >
               {#if isMobileMenuOpen}
                 <X size={20} />
@@ -461,13 +469,13 @@
                 onclick={togglePin}
                 class="flex items-center gap-2 rounded-lg p-2 text-sm font-medium transition-all
                   {localPinned
-                  ? 'bg-indigo-50 text-indigo-600'
-                  : 'text-slate-500 hover:bg-slate-100'}"
+                  ? 'bg-indigo-50 text-indigo-600 hover:bg-indigo-100 dark:bg-indigo-900/30 dark:text-indigo-400 dark:hover:bg-indigo-800/40'
+                  : 'text-slate-500 hover:bg-slate-100 dark:hover:bg-slate-700/50'}"
               >
                 <Pin size={16} class={localPinned ? 'fill-current' : ''} />
               </button>
               <div
-                class="flex flex-1 items-center gap-2 rounded-lg bg-slate-100 px-3 py-2 text-sm"
+                class="flex flex-1 items-center gap-2 rounded-lg bg-slate-100 px-3 py-2 text-sm dark:bg-slate-800"
               >
                 <FolderOpen size={14} class="text-slate-400" />
                 <input
@@ -475,7 +483,7 @@
                   value={localFolder || ''}
                   onchange={updateFolder}
                   placeholder="No Folder"
-                  class="w-full bg-transparent outline-none"
+                  class="w-full bg-transparent outline-none dark:text-slate-200"
                 />
               </div>
             </div>
@@ -485,14 +493,14 @@
                 <button
                   onclick={performUndo}
                   disabled={!history.canUndo}
-                  class="rounded-lg p-2 text-slate-500 hover:bg-slate-100 disabled:opacity-30"
+                  class="rounded-lg p-2 text-slate-500 hover:bg-slate-100 disabled:opacity-30 dark:hover:bg-slate-800"
                 >
                   <Undo2 size={18} />
                 </button>
                 <button
                   onclick={performRedo}
                   disabled={!history.canRedo}
-                  class="rounded-lg p-2 text-slate-500 hover:bg-slate-100 disabled:opacity-30"
+                  class="rounded-lg p-2 text-slate-500 hover:bg-slate-100 disabled:opacity-30 dark:hover:bg-slate-800"
                 >
                   <Redo2 size={18} />
                 </button>
@@ -500,7 +508,7 @@
               <div class="flex gap-1 border-l border-slate-200 pl-2">
                 <button
                   onclick={copyToClipboard}
-                  class="rounded-lg p-2 text-slate-500 hover:bg-slate-100"
+                  class="rounded-lg p-2 text-slate-500 hover:bg-slate-100 dark:hover:bg-slate-800"
                 >
                   {#if isCopied}
                     <Check size={18} class="text-emerald-500" />
@@ -512,7 +520,7 @@
                   onclick={() =>
                     noteStore.selectedNote &&
                     noteStore.delete(noteStore.selectedNote.id)}
-                  class="rounded-lg p-2 text-red-500 hover:bg-red-50"
+                  class="rounded-lg p-2 text-red-500 hover:bg-red-50 dark:hover:bg-red-900/30"
                 >
                   <Trash2 size={18} />
                 </button>
@@ -524,7 +532,7 @@
                 onclick={() =>
                   noteStore.selectedNote &&
                   noteStore.restore(noteStore.selectedNote.id)}
-                class="flex w-full items-center justify-center gap-2 rounded-lg bg-slate-100 py-2 text-sm font-medium text-slate-600 hover:bg-emerald-50 hover:text-emerald-600"
+                class="flex w-full items-center justify-center gap-2 rounded-lg bg-slate-100 py-2 text-sm font-medium text-slate-600 hover:bg-emerald-50 hover:text-emerald-600 dark:bg-slate-800 dark:hover:bg-emerald-900/30"
               >
                 <RotateCcw size={16} />
                 Restore Note
@@ -533,7 +541,7 @@
                 onclick={() =>
                   noteStore.selectedNote &&
                   noteStore.delete(noteStore.selectedNote.id)}
-                class="flex w-full items-center justify-center gap-2 rounded-lg bg-red-50 py-2 text-sm font-medium text-red-600 hover:bg-red-100"
+                class="flex w-full items-center justify-center gap-2 rounded-lg bg-red-50 py-2 text-sm font-medium text-red-600 hover:bg-red-100 dark:bg-red-900/20 dark:hover:bg-red-900/40"
               >
                 <Trash2 size={16} />
                 Delete Permanently
@@ -556,7 +564,7 @@
           value={localTitle}
           disabled={noteStore.selectedNote.is_deleted}
           oninput={(e) => handleInput(e, 'title')}
-          class="mb-4 w-full bg-transparent text-4xl font-bold tracking-tight text-slate-800 outline-none placeholder:text-slate-300/70 disabled:cursor-not-allowed disabled:opacity-50"
+          class="mb-4 w-full bg-transparent text-4xl font-bold tracking-tight text-slate-800 outline-none placeholder:text-slate-300/70 disabled:cursor-not-allowed disabled:opacity-50 dark:text-slate-100 dark:placeholder:text-slate-500"
           placeholder="Untitled Note"
         />
 
@@ -565,7 +573,7 @@
           value={localContent}
           disabled={noteStore.selectedNote.is_deleted}
           oninput={(e) => handleInput(e, 'content')}
-          class="w-full flex-1 resize-none bg-transparent text-lg leading-relaxed text-slate-600 outline-none placeholder:text-slate-300/70 disabled:cursor-not-allowed disabled:opacity-50"
+          class="w-full flex-1 resize-none bg-transparent text-lg leading-relaxed text-slate-600 outline-none placeholder:text-slate-300/70 disabled:cursor-not-allowed disabled:opacity-50 dark:text-slate-200 dark:placeholder:text-slate-500"
           placeholder="Start typing your thoughts..."
           spellcheck="false"
           style="min-height: 60vh;"
@@ -578,7 +586,7 @@
 
     <!-- Footer Stats -->
     <footer
-      class="absolute bottom-0 z-10 flex w-full items-center justify-between border-t border-slate-200/30 bg-white/40 px-6 py-2 text-[10px] font-medium tracking-wider text-slate-400 uppercase backdrop-blur-md transition-opacity duration-500 select-none
+      class="absolute bottom-0 z-10 flex w-full items-center justify-between border-t border-slate-200/30 bg-white/40 px-6 py-2 text-[10px] font-medium tracking-wider text-slate-400 uppercase backdrop-blur-md transition-opacity duration-500 select-none dark:border-white/5 dark:bg-slate-900/60 dark:text-slate-400
       {isZenMode ? 'opacity-0 hover:opacity-100' : 'opacity-100'}"
     >
       <div class="flex items-center gap-4">
@@ -596,8 +604,14 @@
             <Loader2 size={10} class="animate-spin" />
             <span class="hidden sm:inline">Saving...</span>
           {:else if noteStore.syncState === 'saved'}
-            <CheckCircle2 size={10} class="text-emerald-500" />
-            <span class="hidden text-emerald-600 sm:inline">Saved</span>
+            <CheckCircle2
+              size={10}
+              class="text-emerald-500 dark:text-emerald-400"
+            />
+            <span
+              class="hidden text-emerald-600 sm:inline dark:text-emerald-400"
+              >Saved</span
+            >
           {:else if noteStore.syncState === 'error'}
             <span class="text-red-400">Error</span>
           {/if}
@@ -615,9 +629,9 @@
     >
       <button
         onclick={() => (isSidebarOpen = !isSidebarOpen)}
-        class="rounded-lg p-2 text-slate-400 transition-all hover:bg-white/50 hover:text-slate-600 {isSidebarOpen
+        class="rounded-lg p-2 text-slate-400 transition-all hover:bg-white/50 hover:text-slate-600 dark:text-slate-300 dark:hover:bg-white/10 dark:hover:text-white {isSidebarOpen
           ? 'opacity-50'
-          : 'text-indigo-500 opacity-100'}"
+          : 'text-indigo-500 opacity-100 dark:text-indigo-400'}"
         title={isSidebarOpen ? 'Collapse Sidebar' : 'Expand Sidebar'}
       >
         <PanelLeft size={18} />
@@ -625,16 +639,23 @@
     </header>
 
     <div
-      class="flex flex-1 flex-col items-center justify-center space-y-4 text-slate-400"
+      class="flex flex-1 flex-col items-center justify-center space-y-4 text-slate-400 dark:text-slate-400"
     >
-      <div class="rounded-full bg-white/30 p-6 shadow-sm">
-        <PenLine size={64} class="text-indigo-300 opacity-30" />
+      <div class="rounded-full bg-white/30 p-6 shadow-sm dark:bg-white/5">
+        <PenLine
+          size={64}
+          class="text-indigo-300 opacity-30 dark:text-indigo-200 dark:opacity-20"
+        />
       </div>
       <div class="text-center">
-        <p class="text-lg font-medium text-slate-500">No Note Selected</p>
-        <p class="text-sm opacity-60">
-          Press <kbd class="font-sans font-bold text-indigo-400">Ctrl+N</kbd> to
-          create a new note
+        <p class="text-lg font-medium text-slate-500 dark:text-slate-300">
+          No Note Selected
+        </p>
+        <p class="text-sm opacity-60 dark:text-slate-400">
+          Press <kbd
+            class="font-sans font-bold text-indigo-400 dark:text-indigo-300"
+            >Ctrl+N</kbd
+          > to create a new note
         </p>
       </div>
     </div>

@@ -78,7 +78,7 @@
 <!-- Sidebar Container -->
 <aside
   class="fixed inset-y-3 left-3 z-40 flex h-[calc(100vh-1.5rem)] flex-col overflow-hidden rounded-2xl border border-white/50 bg-white/90 shadow-2xl backdrop-blur-xl transition-all duration-300 ease-[cubic-bezier(0.2,0,0,1)] md:relative md:inset-auto
-  md:h-auto md:bg-white/40 md:shadow-xl
+  md:h-auto md:bg-white/40 md:shadow-xl dark:border-white/10 dark:bg-slate-900/70 dark:md:bg-slate-900/70
   {isOpen
     ? 'w-72 translate-x-0 opacity-100 md:mr-3'
     : 'w-0 -translate-x-4 border-0 opacity-0 md:mr-0'}"
@@ -88,7 +88,9 @@
     data-tauri-drag-region
     class="flex items-center justify-between p-4 pb-2 select-none"
   >
-    <div class="flex items-center gap-2 text-indigo-900/80">
+    <div
+      class="flex items-center gap-2 text-indigo-900/80 dark:text-indigo-200/90"
+    >
       <Cloud size={18} strokeWidth={2.5} />
       <span class="text-lg font-bold tracking-tight">Notaro</span>
     </div>
@@ -96,7 +98,7 @@
     <div class="flex items-center gap-1">
       <button
         onclick={() => settingsStore.toggle()}
-        class="rounded-lg border border-transparent p-1.5 text-slate-500 transition-all hover:bg-white/50 hover:text-slate-700 active:scale-95 dark:text-slate-400 dark:hover:text-slate-200"
+        class="rounded-lg border border-transparent p-1.5 text-slate-500 transition-all hover:bg-white/50 hover:text-slate-700 active:scale-95 dark:text-slate-400 dark:hover:bg-slate-700/50 dark:hover:text-slate-200"
         title="Settings"
       >
         <Settings size={18} />
@@ -104,7 +106,7 @@
 
       <button
         onclick={() => noteStore.add()}
-        class="rounded-lg border border-white/40 bg-white/50 p-1.5 text-indigo-600 shadow-sm transition-all hover:bg-white/80 hover:text-indigo-700 active:scale-95"
+        class="rounded-lg border border-white/40 bg-white/50 p-1.5 text-indigo-600 shadow-sm transition-all hover:bg-white/80 hover:text-indigo-700 active:scale-95 dark:border-slate-600/50 dark:bg-slate-700/50 dark:text-indigo-400 dark:hover:bg-slate-600/50"
         title="New Note (Ctrl+N)"
       >
         <Plus size={20} />
@@ -118,8 +120,8 @@
       onclick={() => noteStore.selectFolder('all')}
       class="flex-1 rounded-lg border border-transparent py-1 text-xs font-medium transition-colors
           {noteStore.selectedFolder === 'all'
-        ? 'bg-indigo-100/50 text-indigo-700 shadow-sm'
-        : 'text-slate-500 hover:bg-white/50'}"
+        ? 'bg-indigo-100/50 text-indigo-700 shadow-sm dark:bg-indigo-500/30 dark:text-indigo-200'
+        : 'text-slate-500 hover:bg-white/50 dark:text-slate-400 dark:hover:bg-white/5'}"
     >
       All
     </button>
@@ -127,8 +129,8 @@
       onclick={() => noteStore.selectFolder('pinned')}
       class="flex flex-1 items-center justify-center gap-1 rounded-lg border border-transparent py-1 text-xs font-medium transition-colors
           {noteStore.selectedFolder === 'pinned'
-        ? 'bg-indigo-100/50 text-indigo-700 shadow-sm'
-        : 'text-slate-500 hover:bg-white/50'}"
+        ? 'bg-indigo-100/50 text-indigo-700 shadow-sm dark:bg-indigo-500/30 dark:text-indigo-200'
+        : 'text-slate-500 hover:bg-white/50 dark:text-slate-400 dark:hover:bg-white/5'}"
     >
       <Pin
         size={10}
@@ -139,8 +141,8 @@
       onclick={() => noteStore.selectFolder('trash')}
       class="flex flex-1 items-center justify-center gap-1 rounded-lg border border-transparent py-1 text-xs font-medium transition-colors
           {noteStore.selectedFolder === 'trash'
-        ? 'bg-red-100/50 text-red-700 shadow-sm'
-        : 'text-slate-500 hover:bg-white/50'}"
+        ? 'bg-red-100/50 text-red-700 shadow-sm dark:bg-red-500/20 dark:text-red-300'
+        : 'text-slate-500 hover:bg-white/50 dark:text-slate-400 dark:hover:bg-white/5'}"
     >
       <Trash size={10} /> Trash
     </button>
@@ -150,7 +152,7 @@
   {#if noteStore.availableFolders.length > 0}
     <div class="mb-1 px-4 py-1">
       <div
-        class="mb-1.5 text-[10px] font-bold tracking-wider text-slate-400 uppercase"
+        class="mb-1.5 text-[10px] font-bold tracking-wider text-slate-400 uppercase dark:text-slate-500"
       >
         Folders
       </div>
@@ -160,8 +162,8 @@
             onclick={() => noteStore.selectFolder(folder)}
             class="flex items-center gap-1 rounded-md border px-2 py-1 text-[11px] transition-all
                   {noteStore.selectedFolder === folder
-              ? 'border-indigo-200 bg-white text-indigo-600 shadow-sm'
-              : 'border-transparent bg-white/30 text-slate-600 hover:bg-white/50'}"
+              ? 'border-indigo-200 bg-white text-indigo-600 shadow-sm dark:border-indigo-500/30 dark:bg-indigo-500/20 dark:text-indigo-200'
+              : 'border-transparent bg-white/30 text-slate-600 hover:bg-white/50 dark:bg-white/5 dark:text-slate-400 dark:hover:bg-white/10'}"
           >
             <Folder size={10} />
             {folder}
@@ -183,7 +185,7 @@
         bind:this={searchInput}
         bind:value={noteStore.searchQuery}
         placeholder="Search... (Ctrl+F)"
-        class="w-full rounded-xl border border-transparent bg-slate-50/50 py-2 pr-3 pl-9 text-sm transition-all outline-none placeholder:text-slate-400 focus:border-indigo-200/50 focus:bg-white/70"
+        class="w-full rounded-xl border border-transparent bg-slate-50/50 py-2 pr-3 pl-9 text-sm transition-all outline-none placeholder:text-slate-400 focus:border-indigo-200/50 focus:bg-white/70 dark:bg-slate-800/50 dark:focus:border-indigo-500/30 dark:focus:bg-slate-800"
       />
     </div>
   </div>
@@ -198,8 +200,8 @@
         onkeydown={(e) => handleKeydown(e, note.id)}
         class="group relative w-full cursor-pointer overflow-hidden rounded-xl border p-3 text-left transition-all duration-200 select-none
         {noteStore.selectedId === note.id
-          ? 'border-indigo-100/50 bg-white/90 shadow-sm ring-1 ring-indigo-50'
-          : 'border-transparent hover:border-white/20 hover:bg-white/40'}"
+          ? 'border-indigo-100/50 bg-white/90 shadow-sm ring-1 ring-indigo-50 dark:border-indigo-400/30 dark:bg-indigo-500/20 dark:ring-indigo-400/20'
+          : 'border-transparent hover:border-white/20 hover:bg-white/40 dark:hover:bg-white/5'}"
       >
         <!-- Active Indicator -->
         {#if noteStore.selectedId === note.id}
@@ -213,8 +215,8 @@
           <span
             class="flex items-center gap-1.5 truncate pr-2 font-semibold {noteStore.selectedId ===
             note.id
-              ? 'text-slate-900'
-              : 'text-slate-600'}"
+              ? 'text-slate-900 dark:text-white'
+              : 'text-slate-600 dark:text-slate-200'}"
           >
             {#if note.is_pinned}
               <Pin size={11} class="fill-current text-indigo-400 opacity-100" />
@@ -222,13 +224,15 @@
             {note.title || 'Untitled Note'}
           </span>
           <span
-            class="mt-1 text-[10px] font-medium whitespace-nowrap opacity-50"
+            class="mt-1 text-[10px] font-medium whitespace-nowrap opacity-50 dark:text-slate-400"
           >
             {formatSmartDate(note.updated_at)}
           </span>
         </span>
 
-        <span class="block h-4 truncate text-xs opacity-60">
+        <span
+          class="block h-4 truncate text-xs opacity-60 dark:text-slate-400 dark:opacity-70"
+        >
           {note.content || 'No additional text'}
         </span>
 
@@ -248,7 +252,7 @@
                     !note.is_pinned
                   )
                 )}
-              class="rounded-md bg-white/90 p-1.5 text-slate-500 shadow-sm transition-colors hover:bg-white hover:text-indigo-600"
+              class="rounded-md bg-white/90 p-1.5 text-slate-500 shadow-sm transition-colors hover:bg-white hover:text-indigo-600 dark:bg-slate-700/90 dark:text-slate-400 dark:hover:bg-slate-600 dark:hover:text-indigo-400"
               title={note.is_pinned ? 'Unpin' : 'Pin'}
             >
               {#if note.is_pinned}
@@ -260,7 +264,7 @@
             <button
               onclick={(e) =>
                 handleQuickAction(e, () => noteStore.delete(note.id))}
-              class="rounded-md bg-white/90 p-1.5 text-slate-500 shadow-sm transition-colors hover:bg-white hover:text-red-500"
+              class="rounded-md bg-white/90 p-1.5 text-slate-500 shadow-sm transition-colors hover:bg-white hover:text-red-500 dark:bg-slate-700/90 dark:text-slate-400 dark:hover:bg-slate-600 dark:hover:text-red-400"
               title="Move to Trash"
             >
               <Trash2 size={12} />
@@ -270,7 +274,7 @@
             <button
               onclick={(e) =>
                 handleQuickAction(e, () => noteStore.restore(note.id))}
-              class="rounded-md bg-white/90 p-1.5 text-slate-500 shadow-sm transition-colors hover:bg-white hover:text-emerald-600"
+              class="rounded-md bg-white/90 p-1.5 text-slate-500 shadow-sm transition-colors hover:bg-white hover:text-emerald-600 dark:bg-slate-700/90 dark:text-slate-400 dark:hover:bg-slate-600 dark:hover:text-emerald-400"
               title="Restore"
             >
               <ArchiveRestore size={12} />

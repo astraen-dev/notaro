@@ -10,9 +10,23 @@
   let isSidebarOpen = $state(true);
   let sidebarRef = $state<Sidebar>();
 
+  // Track system preference reactively
+  let systemPrefersDark = $state(false);
+
   onMount(() => {
     void noteStore.init();
     void settingsStore.init();
+
+    // Initialize and listen to system preference changes
+    const mediaQuery = window.matchMedia('(prefers-color-scheme: dark)');
+    systemPrefersDark = mediaQuery.matches;
+
+    const handler = (e: MediaQueryListEvent) => {
+      systemPrefersDark = e.matches;
+    };
+
+    mediaQuery.addEventListener('change', handler);
+    return () => mediaQuery.removeEventListener('change', handler);
   });
 
   // Global Theme Management
@@ -30,10 +44,10 @@
     root.style.setProperty('--font-size-base', `${s.font_size}px`);
     root.style.setProperty('--accent-hue', s.accent_hue.toString());
 
+    // Calculate theme based on Store AND Reactive System State
     const isDark =
       s.theme_mode === 'dark' ||
-      (s.theme_mode === 'system' &&
-        window.matchMedia('(prefers-color-scheme: dark)').matches);
+      (s.theme_mode === 'system' && systemPrefersDark);
 
     if (isDark) {
       root.classList.add('dark');
@@ -66,7 +80,7 @@
 <SettingsModal />
 
 <main
-  class="flex h-screen w-screen overflow-hidden bg-gradient-to-br from-transparent to-black/5 p-3 text-slate-700 selection:bg-indigo-100 selection:text-indigo-900"
+  class="flex h-screen w-screen overflow-hidden bg-gradient-to-br from-transparent to-black/5 p-3 text-slate-700 selection:bg-indigo-100 selection:text-indigo-900 dark:text-slate-200 dark:selection:bg-indigo-900/50 dark:selection:text-indigo-100"
 >
   <Sidebar bind:this={sidebarRef} bind:isOpen={isSidebarOpen} />
   <Editor bind:isSidebarOpen />

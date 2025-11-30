@@ -1,5 +1,11 @@
 @import 'tailwindcss';
 
+/*
+   Force Tailwind to use class-based dark mode strategy.
+   This allows us to manually toggle .dark class on the html element.
+*/
+@variant dark (&:where(.dark, .dark *));
+
 :root {
   --accent-hue: 250;
   --font-main: 'Inter', sans-serif;
