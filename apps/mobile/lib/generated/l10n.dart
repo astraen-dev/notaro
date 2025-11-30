@@ -145,6 +145,36 @@ class S {
     );
   }
 
+  /// `This application uses open-source software. The following list contains the libraries used, their versions, and their licenses.`
+  String get licenseDisclaimerContent {
+    return Intl.message(
+      'This application uses open-source software. The following list contains the libraries used, their versions, and their licenses.',
+      name: 'licenseDisclaimerContent',
+      desc: 'Content body for the license disclaimer.',
+      args: [],
+    );
+  }
+
+  /// `Notices`
+  String get licenseDisclaimerTitle {
+    return Intl.message(
+      'Notices',
+      name: 'licenseDisclaimerTitle',
+      desc: 'Title for the license disclaimer dialog.',
+      args: [],
+    );
+  }
+
+  /// `v{version}`
+  String licensePackageVersion(String version) {
+    return Intl.message(
+      'v$version',
+      name: 'licensePackageVersion',
+      desc: 'Compact version label for license list items.',
+      args: [version],
+    );
+  }
+
   /// `No matches found`
   String get noMatches {
     return Intl.message(
@@ -188,12 +218,32 @@ class S {
     );
   }
 
+  /// `OK`
+  String get okButtonLabel {
+    return Intl.message(
+      'OK',
+      name: 'okButtonLabel',
+      desc: 'Standard confirmation button label.',
+      args: [],
+    );
+  }
+
   /// `Search notes...`
   String get searchHint {
     return Intl.message(
       'Search notes...',
       name: 'searchHint',
       desc: 'Placeholder text displayed inside the search bar.',
+      args: [],
+    );
+  }
+
+  /// `ABOUT`
+  String get settingsAbout {
+    return Intl.message(
+      'ABOUT',
+      name: 'settingsAbout',
+      desc: 'Section header for the about/info section in settings.',
       args: [],
     );
   }
@@ -218,6 +268,36 @@ class S {
     );
   }
 
+  /// `Open Source Licenses`
+  String get settingsLicenses {
+    return Intl.message(
+      'Open Source Licenses',
+      name: 'settingsLicenses',
+      desc: 'Button label to view open source licenses.',
+      args: [],
+    );
+  }
+
+  /// `Rate & Review`
+  String get settingsRate {
+    return Intl.message(
+      'Rate & Review',
+      name: 'settingsRate',
+      desc: 'Button label to rate the app on the store.',
+      args: [],
+    );
+  }
+
+  /// `Share Notaro`
+  String get settingsShare {
+    return Intl.message(
+      'Share Notaro',
+      name: 'settingsShare',
+      desc: 'Button label to share the app.',
+      args: [],
+    );
+  }
+
   /// `THEME`
   String get settingsTheme {
     return Intl.message(
@@ -235,6 +315,16 @@ class S {
       name: 'settingsTypography',
       desc: 'Section header for the font family selection controls.',
       args: [],
+    );
+  }
+
+  /// `Version {version}`
+  String settingsVersion(String version) {
+    return Intl.message(
+      'Version $version',
+      name: 'settingsVersion',
+      desc: 'Label showing the current app version.',
+      args: [version],
     );
   }
 

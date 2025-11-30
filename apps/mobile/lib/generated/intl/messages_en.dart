@@ -22,6 +22,10 @@ class MessageLookup extends MessageLookupByLibrary {
 
   static String m0(count) => "${count} chars";
 
+  static String m1(version) => "v${version}";
+
+  static String m2(version) => "Version ${version}";
+
   final messages = _notInlinedMessages(_notInlinedMessages);
   static Map<String, Function> _notInlinedMessages(_) => <String, Function>{
     "appName": MessageLookupByLibrary.simpleMessage("Notaro"),
@@ -35,15 +39,28 @@ class MessageLookup extends MessageLookupByLibrary {
     "fontMono": MessageLookupByLibrary.simpleMessage("Mono"),
     "fontSans": MessageLookupByLibrary.simpleMessage("Sans Serif"),
     "fontSerif": MessageLookupByLibrary.simpleMessage("Serif"),
+    "licenseDisclaimerContent": MessageLookupByLibrary.simpleMessage(
+      "This application uses open-source software. The following list contains the libraries used, their versions, and their licenses.",
+    ),
+    "licenseDisclaimerTitle": MessageLookupByLibrary.simpleMessage("Notices"),
+    "licensePackageVersion": m1,
     "noMatches": MessageLookupByLibrary.simpleMessage("No matches found"),
     "noNotes": MessageLookupByLibrary.simpleMessage("No notes here"),
     "noteNoContent": MessageLookupByLibrary.simpleMessage("No additional text"),
     "noteUntitled": MessageLookupByLibrary.simpleMessage("Untitled Note"),
+    "okButtonLabel": MessageLookupByLibrary.simpleMessage("OK"),
     "searchHint": MessageLookupByLibrary.simpleMessage("Search notes..."),
+    "settingsAbout": MessageLookupByLibrary.simpleMessage("ABOUT"),
     "settingsAccentColor": MessageLookupByLibrary.simpleMessage("ACCENT COLOR"),
     "settingsAppearance": MessageLookupByLibrary.simpleMessage("Appearance"),
+    "settingsLicenses": MessageLookupByLibrary.simpleMessage(
+      "Open Source Licenses",
+    ),
+    "settingsRate": MessageLookupByLibrary.simpleMessage("Rate & Review"),
+    "settingsShare": MessageLookupByLibrary.simpleMessage("Share Notaro"),
     "settingsTheme": MessageLookupByLibrary.simpleMessage("THEME"),
     "settingsTypography": MessageLookupByLibrary.simpleMessage("TYPOGRAPHY"),
+    "settingsVersion": m2,
     "themeDark": MessageLookupByLibrary.simpleMessage("Dark"),
     "themeLight": MessageLookupByLibrary.simpleMessage("Light"),
     "themeSystem": MessageLookupByLibrary.simpleMessage("System"),

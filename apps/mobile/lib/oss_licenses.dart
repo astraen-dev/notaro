@@ -182,6 +182,7 @@ const allDependencies = <Package>[
 
 /// Direct `dependencies`.
 const dependencies = <Package>[
+  _collection,
   _cupertino_icons,
   _dio,
   _flutter,
@@ -10018,7 +10019,7 @@ const _notaro_mobile = Package(
     spdxIdentifiers: [],
     isMarkdown: false,
     isSdk: false,
-    dependencies: [PackageRef('cupertino_icons'), PackageRef('dio'), PackageRef('flutter'), PackageRef('flutter_animate'), PackageRef('flutter_launcher_icons'), PackageRef('flutter_native_splash'), PackageRef('flutter_riverpod'), PackageRef('flutter_screenutil'), PackageRef('freezed_annotation'), PackageRef('go_router'), PackageRef('google_fonts'), PackageRef('hooks_riverpod'), PackageRef('in_app_review'), PackageRef('intl'), PackageRef('intl_utils'), PackageRef('json_annotation'), PackageRef('lucide_icons_flutter'), PackageRef('package_info_plus'), PackageRef('riverpod_annotation'), PackageRef('share_plus'), PackageRef('shared_preferences'), PackageRef('shimmer'), PackageRef('uuid')],
+    dependencies: [PackageRef('collection'), PackageRef('cupertino_icons'), PackageRef('dio'), PackageRef('flutter'), PackageRef('flutter_animate'), PackageRef('flutter_launcher_icons'), PackageRef('flutter_native_splash'), PackageRef('flutter_riverpod'), PackageRef('flutter_screenutil'), PackageRef('freezed_annotation'), PackageRef('go_router'), PackageRef('google_fonts'), PackageRef('hooks_riverpod'), PackageRef('in_app_review'), PackageRef('intl'), PackageRef('intl_utils'), PackageRef('json_annotation'), PackageRef('lucide_icons_flutter'), PackageRef('package_info_plus'), PackageRef('riverpod_annotation'), PackageRef('share_plus'), PackageRef('shared_preferences'), PackageRef('shimmer'), PackageRef('uuid')],
     devDependencies: [PackageRef('build_runner'), PackageRef('custom_lint'), PackageRef('dart_pubspec_licenses'), PackageRef('flutter_lints'), PackageRef('freezed'), PackageRef('freezed_lint'), PackageRef('go_router_builder'), PackageRef('json_serializable'), PackageRef('remove_unused_localizations_keys'), PackageRef('riverpod_generator'), PackageRef('riverpod_lint')],
   );
 

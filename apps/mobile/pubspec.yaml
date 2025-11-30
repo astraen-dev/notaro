@@ -9,6 +9,7 @@ environment:
   sdk: ^3.9.2
 
 dependencies:
+  collection: ^1.19.1
   cupertino_icons: ^1.0.8
   dio: ^5.9.0
   flutter:
