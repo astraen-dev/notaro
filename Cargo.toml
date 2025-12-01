@@ -4,6 +4,7 @@ members = [
     "packages/core",
     "apps/server",
     "apps/desktop/src-tauri",
+    "apps/mobile/rust"
 ]
 
 # Optional: Define shared profiles for faster builds

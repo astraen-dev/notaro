@@ -1,4 +1,6 @@
+import "dart:async";
 import "dart:ui";
+
 import "package:flutter/material.dart";
 import "package:flutter_riverpod/flutter_riverpod.dart";
 import "package:flutter_screenutil/flutter_screenutil.dart";
@@ -22,17 +24,14 @@ class _EditorScreenState extends ConsumerState<EditorScreen> {
   late TextEditingController _titleController;
   late TextEditingController _contentController;
 
+  // Track if we have populated the controllers with the initial data
+  bool _isInitialized = false;
+
   @override
   void initState() {
     super.initState();
-    final Note note = ref
-        .read(notesProvider)
-        .firstWhere(
-          (final n) => n.id == widget.noteId,
-          orElse: () => throw Exception("Note not found"),
-        );
-    _titleController = TextEditingController(text: note.title);
-    _contentController = TextEditingController(text: note.content);
+    _titleController = TextEditingController();
+    _contentController = TextEditingController();
   }
 
   @override
@@ -43,206 +42,248 @@ class _EditorScreenState extends ConsumerState<EditorScreen> {
   }
 
   void _save() {
-    ref
-        .read(notesProvider.notifier)
-        .updateNote(
-          widget.noteId,
-          _titleController.text,
-          _contentController.text,
-        );
+    // Fire and forget (or await if you want to show saving status)
+    unawaited(
+      ref
+          .read(notesProvider.notifier)
+          .updateNote(
+            widget.noteId,
+            _titleController.text,
+            _contentController.text,
+          ),
+    );
   }
 
   @override
   Widget build(final BuildContext context) {
-    final Note note = ref
-        .watch(notesProvider)
-        .firstWhere(
+    final AsyncValue<List<Note>> notesAsync = ref.watch(notesProvider);
+    final bool isDark = Theme.of(context).brightness == Brightness.dark;
+
+    return notesAsync.when(
+      loading: () =>
+          const Scaffold(body: Center(child: CircularProgressIndicator())),
+      error: (final err, _) =>
+          Scaffold(body: Center(child: Text("Error: $err"))),
+      data: (final notes) {
+        // Find the specific note
+        final Note note = notes.firstWhere(
           (final n) => n.id == widget.noteId,
           orElse: () {
+            // Note might have been deleted or doesn't exist.
+            // Schedule a pop to avoid stuck UI.
             WidgetsBinding.instance.addPostFrameCallback((_) {
               if (mounted) {
                 context.pop();
               }
             });
-            return ref.read(notesProvider).first;
+            // Return a dummy note to satisfy the build method temporarily
+            return Note(
+              id: "",
+              title: "",
+              content: "",
+              updatedAt: DateTime.now(),
+              version: 0,
+            );
           },
         );
 
-    final bool isDark = Theme.of(context).brightness == Brightness.dark;
+        // If the note wasn't found (dummy note returned), don't build the UI
+        if (note.id.isEmpty) {
+          return const SizedBox.shrink();
+        }
 
-    // Use MeshGradientScaffold for background consistency
-    return MeshGradientScaffold(
-      body: SafeArea(
-        child: Column(
-          children: [
-            // 1. Toolbar (Matches Desktop Header)
-            Padding(
-              padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 8.h),
-              child: Row(
-                children: [
-                  IconButton(
-                    icon: Icon(LucideIcons.chevronLeft, size: 24.sp),
-                    style: IconButton.styleFrom(
-                      backgroundColor: Colors.white.withValues(
-                        alpha: isDark ? 0.1 : 0.5,
-                      ),
-                    ),
-                    onPressed: context.pop,
-                  ),
-                  const Spacer(),
-                  IconButton(
-                    icon: Icon(
-                      note.isPinned ? LucideIcons.pin : LucideIcons.pinOff,
-                      size: 20.sp,
-                      color: note.isPinned
-                          ? Theme.of(context).colorScheme.primary
-                          : null,
-                    ),
-                    style: IconButton.styleFrom(
-                      backgroundColor: Colors.white.withValues(
-                        alpha: isDark ? 0.1 : 0.5,
-                      ),
-                    ),
-                    onPressed: () =>
-                        ref.read(notesProvider.notifier).togglePin(note.id),
-                  ),
-                  SizedBox(width: 8.w),
-                  IconButton(
-                    icon: Icon(LucideIcons.trash2, size: 20.sp),
-                    style: IconButton.styleFrom(
-                      backgroundColor: Colors.white.withValues(
-                        alpha: isDark ? 0.1 : 0.5,
-                      ),
-                      foregroundColor: Theme.of(context).colorScheme.error,
-                    ),
-                    onPressed: () {
-                      ref.read(notesProvider.notifier).deleteNote(note.id);
-                      context.pop();
-                    },
-                  ),
-                ],
-              ),
-            ),
+        // Initialize controllers ONCE to prevent cursor jumping or overwriting user input
+        if (!_isInitialized) {
+          _titleController.text = note.title;
+          _contentController.text = note.content;
+          _isInitialized = true;
+        }
 
-            // 2. Editor Pane (Glass Card)
-            Expanded(
-              child: Container(
-                margin: EdgeInsets.fromLTRB(16.w, 0, 16.w, 16.h),
-                child: ClipRRect(
-                  borderRadius: BorderRadius.circular(24.r),
-                  child: BackdropFilter(
-                    filter: ImageFilter.blur(sigmaX: 20, sigmaY: 20),
-                    child: DecoratedBox(
-                      decoration: BoxDecoration(
-                        color: isDark
-                            ? Colors.black.withValues(alpha: 0.2)
-                            : Colors.white.withValues(alpha: 0.6),
-                        border: Border.all(
-                          color: Colors.white.withValues(
-                            alpha: isDark ? 0.1 : 0.4,
+        // Use MeshGradientScaffold for background consistency
+        return MeshGradientScaffold(
+          body: SafeArea(
+            child: Column(
+              children: [
+                // 1. Toolbar
+                Padding(
+                  padding: EdgeInsets.symmetric(
+                    horizontal: 16.w,
+                    vertical: 8.h,
+                  ),
+                  child: Row(
+                    children: [
+                      IconButton(
+                        icon: Icon(LucideIcons.chevronLeft, size: 24.sp),
+                        style: IconButton.styleFrom(
+                          backgroundColor: Colors.white.withValues(
+                            alpha: isDark ? 0.1 : 0.5,
                           ),
                         ),
-                        borderRadius: BorderRadius.circular(24.r),
+                        onPressed: context.pop,
                       ),
-                      child: Column(
-                        children: [
-                          // Title Input
-                          Padding(
-                            padding: EdgeInsets.fromLTRB(
-                              24.w,
-                              32.h,
-                              24.w,
-                              16.h,
-                            ),
-                            child: TextField(
-                              controller: _titleController,
-                              onChanged: (_) => _save(),
-                              style: TextStyle(
-                                fontSize: 28.sp,
-                                fontWeight: FontWeight.bold,
-                                letterSpacing: -0.5,
-                                height: 1.2,
-                              ),
-                              decoration: InputDecoration(
-                                hintText: S.of(context).noteUntitled,
-                                hintStyle: TextStyle(
-                                  color: Theme.of(context).colorScheme.onSurface
-                                      .withValues(alpha: 0.3),
-                                ),
-                                border: InputBorder.none,
-                                contentPadding: EdgeInsets.zero,
-                              ),
-                              maxLines: null,
-                              textInputAction: TextInputAction.next,
-                            ),
+                      const Spacer(),
+                      IconButton(
+                        icon: Icon(
+                          note.isPinned ? LucideIcons.pin : LucideIcons.pinOff,
+                          size: 20.sp,
+                          color: note.isPinned
+                              ? Theme.of(context).colorScheme.primary
+                              : null,
+                        ),
+                        style: IconButton.styleFrom(
+                          backgroundColor: Colors.white.withValues(
+                            alpha: isDark ? 0.1 : 0.5,
                           ),
-
-                          // Content Input
-                          Expanded(
-                            child: TextField(
-                              controller: _contentController,
-                              onChanged: (_) => _save(),
-                              style: TextStyle(
-                                fontSize: 16.sp,
-                                height: 1.6,
-                                color: Theme.of(
-                                  context,
-                                ).colorScheme.onSurface.withValues(alpha: 0.9),
-                              ),
-                              decoration: InputDecoration(
-                                hintText: S.of(context).editorStartTyping,
-                                hintStyle: TextStyle(
-                                  color: Theme.of(context)
-                                      .colorScheme
-                                      .onSurfaceVariant
-                                      .withValues(alpha: 0.4),
-                                ),
-                                border: InputBorder.none,
-                                contentPadding: EdgeInsets.symmetric(
-                                  horizontal: 24.w,
-                                ),
-                              ),
-                              maxLines: null,
-                              expands: true,
-                              textAlignVertical: TextAlignVertical.top,
-                            ),
+                        ),
+                        onPressed: () =>
+                            ref.read(notesProvider.notifier).togglePin(note.id),
+                      ),
+                      SizedBox(width: 8.w),
+                      IconButton(
+                        icon: Icon(LucideIcons.trash2, size: 20.sp),
+                        style: IconButton.styleFrom(
+                          backgroundColor: Colors.white.withValues(
+                            alpha: isDark ? 0.1 : 0.5,
                           ),
+                          foregroundColor: Theme.of(context).colorScheme.error,
+                        ),
+                        onPressed: () {
+                          unawaited(
+                            ref
+                                .read(notesProvider.notifier)
+                                .deleteNote(note.id),
+                          );
+                          context.pop();
+                        },
+                      ),
+                    ],
+                  ),
+                ),
 
-                          // Info Footer
-                          Padding(
-                            padding: EdgeInsets.all(16.w),
-                            child: Row(
-                              mainAxisAlignment: MainAxisAlignment.end,
-                              children: [
-                                Text(
-                                  S
-                                      .of(context)
-                                      .editorCharCount(
-                                        _contentController.text.length,
-                                      ),
+                // 2. Editor Pane (Glass Card)
+                Expanded(
+                  child: Container(
+                    margin: EdgeInsets.fromLTRB(16.w, 0, 16.w, 16.h),
+                    child: ClipRRect(
+                      borderRadius: BorderRadius.circular(24.r),
+                      child: BackdropFilter(
+                        filter: ImageFilter.blur(sigmaX: 20, sigmaY: 20),
+                        child: DecoratedBox(
+                          decoration: BoxDecoration(
+                            color: isDark
+                                ? Colors.black.withValues(alpha: 0.2)
+                                : Colors.white.withValues(alpha: 0.6),
+                            border: Border.all(
+                              color: Colors.white.withValues(
+                                alpha: isDark ? 0.1 : 0.4,
+                              ),
+                            ),
+                            borderRadius: BorderRadius.circular(24.r),
+                          ),
+                          child: Column(
+                            children: [
+                              // Title Input
+                              Padding(
+                                padding: EdgeInsets.fromLTRB(
+                                  24.w,
+                                  32.h,
+                                  24.w,
+                                  16.h,
+                                ),
+                                child: TextField(
+                                  controller: _titleController,
+                                  onChanged: (_) => _save(),
                                   style: TextStyle(
-                                    fontSize: 10.sp,
+                                    fontSize: 28.sp,
+                                    fontWeight: FontWeight.bold,
+                                    letterSpacing: -0.5,
+                                    height: 1.2,
+                                  ),
+                                  decoration: InputDecoration(
+                                    hintText: S.of(context).noteUntitled,
+                                    hintStyle: TextStyle(
+                                      color: Theme.of(context)
+                                          .colorScheme
+                                          .onSurface
+                                          .withValues(alpha: 0.3),
+                                    ),
+                                    border: InputBorder.none,
+                                    contentPadding: EdgeInsets.zero,
+                                  ),
+                                  maxLines: null,
+                                  textInputAction: TextInputAction.next,
+                                ),
+                              ),
+
+                              // Content Input
+                              Expanded(
+                                child: TextField(
+                                  controller: _contentController,
+                                  onChanged: (_) => _save(),
+                                  style: TextStyle(
+                                    fontSize: 16.sp,
+                                    height: 1.6,
                                     color: Theme.of(context)
                                         .colorScheme
                                         .onSurface
-                                        .withValues(alpha: 0.4),
-                                    fontWeight: FontWeight.w600,
-                                    letterSpacing: 0.5,
+                                        .withValues(alpha: 0.9),
                                   ),
+                                  decoration: InputDecoration(
+                                    hintText: S.of(context).editorStartTyping,
+                                    hintStyle: TextStyle(
+                                      color: Theme.of(context)
+                                          .colorScheme
+                                          .onSurfaceVariant
+                                          .withValues(alpha: 0.4),
+                                    ),
+                                    border: InputBorder.none,
+                                    contentPadding: EdgeInsets.symmetric(
+                                      horizontal: 24.w,
+                                    ),
+                                  ),
+                                  maxLines: null,
+                                  expands: true,
+                                  textAlignVertical: TextAlignVertical.top,
                                 ),
-                              ],
-                            ),
+                              ),
+
+                              // Info Footer
+                              Padding(
+                                padding: EdgeInsets.all(16.w),
+                                child: Row(
+                                  mainAxisAlignment: MainAxisAlignment.end,
+                                  children: [
+                                    Text(
+                                      S
+                                          .of(context)
+                                          .editorCharCount(
+                                            _contentController.text.length,
+                                          ),
+                                      style: TextStyle(
+                                        fontSize: 10.sp,
+                                        color: Theme.of(context)
+                                            .colorScheme
+                                            .onSurface
+                                            .withValues(alpha: 0.4),
+                                        fontWeight: FontWeight.w600,
+                                        letterSpacing: 0.5,
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                            ],
                           ),
-                        ],
+                        ),
                       ),
                     ),
                   ),
                 ),
-              ),
+              ],
             ),
-          ],
-        ),
-      ),
+          ),
+        );
+      },
     );
   }
 }

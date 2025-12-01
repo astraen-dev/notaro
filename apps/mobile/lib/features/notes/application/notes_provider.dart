@@ -1,79 +1,71 @@
+import "dart:async";
 import "package:notaro_mobile/features/notes/domain/note.dart";
+import "package:notaro_mobile/rust/api/native.dart" as rust_api;
 import "package:riverpod_annotation/riverpod_annotation.dart";
-import "package:uuid/uuid.dart";
 
 part "notes_provider.g.dart";
-
-const _uuid = Uuid();
 
 @riverpod
 class NotesNotifier extends _$NotesNotifier {
   @override
-  List<Note> build() => [
-    Note(
-      id: _uuid.v4(),
-      title: "Project Ideas",
-      content:
-          "1. Hyper-lightweight note app\n2. AI integration\n3. Cross-platform sync",
-      updatedAt: DateTime.now().subtract(const Duration(minutes: 5)),
-      version: 1,
-      isPinned: true,
-    ),
-    Note(
-      id: _uuid.v4(),
-      title: "Groceries",
-      content: "Milk, Eggs, Bread, Coffee",
-      updatedAt: DateTime.now().subtract(const Duration(days: 1)),
-      version: 1,
-      folder: "Personal",
-    ),
-    Note(
-      id: _uuid.v4(),
-      title: "Meeting Notes",
-      content: "Discussed Q3 roadmap. Key takeaways...",
-      updatedAt: DateTime.now().subtract(const Duration(days: 2)),
-      version: 1,
-      folder: "Work",
-    ),
-  ];
+  Future<List<Note>> build() async {
+    final List<rust_api.Note> rustNotes = await rust_api.getAllNotes();
 
-  void addNote() {
-    final newNote = Note(
-      id: _uuid.v4(),
-      title: "",
-      content: "",
-      updatedAt: DateTime.now(),
-      version: 1,
+    return rustNotes
+        .map(
+          (final n) => Note(
+            id: n.id,
+            title: n.title,
+            content: n.content,
+            updatedAt: DateTime.parse(n.updatedAt),
+            version: n.version,
+            folder: n.folder,
+            isPinned: n.isPinned,
+            isDeleted: n.isDeleted,
+          ),
+        )
+        .toList();
+  }
+
+  Future<void> addNote() async {
+    await rust_api.createNote(title: "", content: "");
+    ref.invalidateSelf();
+  }
+
+  Future<void> updateNote(
+    final String id,
+    final String title,
+    final String content,
+  ) async {
+    final List<Note> currentList = state.value ?? [];
+    final Note oldNote = currentList.firstWhere((final n) => n.id == id);
+
+    await rust_api.updateNote(
+      id: id,
+      title: title,
+      content: content,
+      folder: oldNote.folder,
+      isPinned: oldNote.isPinned,
     );
-    state = [newNote, ...state];
+    ref.invalidateSelf();
   }
 
-  void updateNote(final String id, final String title, final String content) {
-    state = [
-      for (final note in state)
-        if (note.id == id)
-          note.copyWith(
-            title: title,
-            content: content,
-            updatedAt: DateTime.now(),
-          )
-        else
-          note,
-    ];
+  Future<void> togglePin(final String id) async {
+    final List<Note> currentList = state.value ?? [];
+    final Note note = currentList.firstWhere((final n) => n.id == id);
+
+    await rust_api.updateNote(
+      id: id,
+      title: note.title,
+      content: note.content,
+      folder: note.folder,
+      isPinned: !note.isPinned,
+    );
+    ref.invalidateSelf();
   }
 
-  void togglePin(final String id) {
-    state = [
-      for (final note in state)
-        if (note.id == id) note.copyWith(isPinned: !note.isPinned) else note,
-    ];
-  }
-
-  void deleteNote(final String id) {
-    // Soft delete logic to match Desktop
-    state = [
-      for (final note in state)
-        if (note.id == id) note.copyWith(isDeleted: true) else note,
-    ];
+  Future<void> deleteNote(final String id) async {
+    await rust_api.deleteNote(id: id);
+    ref.invalidateSelf();
   }
 }

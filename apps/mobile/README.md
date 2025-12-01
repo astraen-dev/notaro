@@ -57,6 +57,16 @@ lib/
 ├── main.dart  # Entry point
 ```
 
+## Flutter Rust Bridge
+
+This project uses `flutter_rust_bridge` to interface with the Rust core library (`notaro_core`).
+
+To regenerate the FFI bindings after modifying the Rust code:
+
+```bash
+flutter_rust_bridge_codegen generate
+```
+
 ## Localization
 
 This project uses standard Flutter localization with ARB files. The source of truth is `lib/l10n/intl_en.arb`.

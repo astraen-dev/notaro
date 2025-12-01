@@ -9,8 +9,9 @@ class UserPreferencesNotifier extends _$UserPreferencesNotifier {
   late PreferencesRepository _repository;
 
   @override
-  Future<UserPreferences> build() async {
-    _repository = await ref.watch(preferencesRepositoryProvider.future);
+  Future<UserPreferences> build() {
+    // Initialize repository directly (it's stateless/static now)
+    _repository = PreferencesRepository();
     return _repository.getUserPreferences();
   }
 

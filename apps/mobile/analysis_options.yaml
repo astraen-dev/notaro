@@ -11,6 +11,9 @@ analyzer:
     - 'lib/oss_licenses.dart'
     - 'lib/generated/intl/**'
     - 'lib/generated/l10n.dart'
+    - 'lib/rust/**'
+    - 'rust_builder/**'
+    - 'build/**'
 
 linter:
   rules:

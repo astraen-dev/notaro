@@ -1,3 +1,5 @@
+import "dart:io";
+
 import "package:flutter/material.dart";
 import "package:flutter_localizations/flutter_localizations.dart";
 import "package:flutter_riverpod/flutter_riverpod.dart";
@@ -8,9 +10,21 @@ import "package:notaro_mobile/core/navigation/app_router.dart";
 import "package:notaro_mobile/core/ui/app_theme.dart";
 import "package:notaro_mobile/core/ui/theme_provider.dart";
 import "package:notaro_mobile/generated/l10n.dart";
+import "package:notaro_mobile/rust/api/native.dart" as rust_api;
+import "package:notaro_mobile/rust/frb_generated.dart";
 import "package:notaro_mobile/shared/domain/user_preferences.dart";
+import "package:path_provider/path_provider.dart";
 
-void main() {
+Future<void> main() async {
+  WidgetsFlutterBinding.ensureInitialized();
+
+  // 1. Init Rust
+  await RustLib.init();
+
+  // 2. Init DB
+  final Directory docsDir = await getApplicationDocumentsDirectory();
+  await rust_api.initDb(appDocDir: docsDir.path);
+
   runApp(const ProviderScope(child: NotaroApp()));
 }
 

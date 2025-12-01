@@ -5,6 +5,7 @@
     "lint": "flutter analyze",
     "format": "dart format .",
     "gen-l10n": "dart run intl_utils:generate",
-    "gen-licenses": "dart run dart_pubspec_licenses:generate"
+    "gen-licenses": "dart run dart_pubspec_licenses:generate",
+    "gen-code": "flutter_rust_bridge_codegen generate && dart run build_runner build --delete-conflicting-outputs && pnpm gen-l10n && pnpm gen-licenses"
   }
 }

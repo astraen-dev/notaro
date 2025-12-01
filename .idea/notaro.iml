@@ -12,6 +12,7 @@
       <sourceFolder url="file://$MODULE_DIR$/apps/server/src" isTestSource="false" />
       <sourceFolder url="file://$MODULE_DIR$/packages/core/src" isTestSource="false" />
       <sourceFolder url="file://$MODULE_DIR$/packages/core/tests" isTestSource="true" />
+      <sourceFolder url="file://$MODULE_DIR$/apps/mobile/rust/src" isTestSource="false" />
       <excludeFolder url="file://$MODULE_DIR$/.idea/libraries" />
       <excludeFolder url="file://$MODULE_DIR$/apps/desktop/.svelte-kit" />
       <excludeFolder url="file://$MODULE_DIR$/apps/desktop/src-tauri/gen/schemas" />
@@ -97,6 +98,8 @@
       <excludeFolder url="file://$MODULE_DIR$/node_modules/.pnpm/node_modules/notaro_mobile/.pub" />
       <excludeFolder url="file://$MODULE_DIR$/node_modules/.pnpm/node_modules/notaro_mobile/build" />
       <excludeFolder url="file://$MODULE_DIR$/apps/mobile/android/.gradle" />
+      <excludeFolder url="file://$MODULE_DIR$/apps/mobile/rust_builder" />
+      <excludeFolder url="file://$MODULE_DIR$/apps/mobile/rust_builder/cargokit/build_tool/.dart_tool" />
     </content>
     <orderEntry type="inheritedJdk" />
     <orderEntry type="sourceFolder" forTests="false" />

@@ -11,6 +11,7 @@ import "package:notaro_mobile/features/notes/application/notes_provider.dart";
 import "package:notaro_mobile/features/notes/domain/note.dart";
 import "package:notaro_mobile/features/settings/presentation/settings_modal.dart";
 import "package:notaro_mobile/generated/l10n.dart";
+import "package:notaro_mobile/rust/api/native.dart" as rust_api;
 import "package:notaro_mobile/shared/widgets/mesh_gradient_scaffold.dart";
 
 class HomeScreen extends ConsumerStatefulWidget {
@@ -38,77 +39,49 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
     super.dispose();
   }
 
+  Future<void> _handleCreateNote() async {
+    // Prevent creation if in Trash view
+    if (_selectedFilter == "trash") {
+      return;
+    }
+
+    try {
+      // 1. Create directly via API to get the ID immediately
+      final rust_api.Note rustNote = await rust_api.createNote(
+        title: "",
+        content: "",
+        folder: _selectedFilter != "all" && _selectedFilter != "pinned"
+            ? _selectedFilter
+            : null,
+      );
+
+      // 2. Refresh the provider in the background
+      ref.invalidate(notesProvider);
+
+      // 3. Navigate immediately
+      if (mounted) {
+        unawaited(
+          context.pushNamed("editor", pathParameters: {"id": rustNote.id}),
+        );
+      }
+    } on Exception catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text("Failed to create note: $e")));
+      }
+    }
+  }
+
   @override
   Widget build(final BuildContext context) {
-    final List<Note> notes = ref.watch(notesProvider);
+    final AsyncValue<List<Note>> notesAsync = ref.watch(notesProvider);
     final ColorScheme colorScheme = Theme.of(context).colorScheme;
     final bool isDark = Theme.of(context).brightness == Brightness.dark;
 
-    // 1. Extract Unique Folders (Logic mirrors Desktop noteStore availableFolders)
-    final Set<String> folders = notes
-        .where(
-          (final n) =>
-              !n.isDeleted && n.folder != null && n.folder!.trim().isNotEmpty,
-        )
-        .map((final n) => n.folder!)
-        .toSet();
-    final List<String> sortedFolders = folders.toList()..sort();
-
-    // 2. Filter Logic (Logic mirrors Desktop noteStore filteredNotes)
-    final List<Note> filteredNotes =
-        notes.where((final note) {
-            // A. Search Text Filter
-            if (_searchQuery.isNotEmpty) {
-              final String query = _searchQuery.toLowerCase();
-              final bool matches =
-                  note.title.toLowerCase().contains(query) ||
-                  note.content.toLowerCase().contains(query);
-              if (!matches) {
-                return false;
-              }
-            }
-
-            // B. Context Filter
-            if (_selectedFilter == "trash") {
-              // In trash mode, ONLY show deleted notes
-              return note.isDeleted;
-            }
-
-            // In normal modes, ONLY show active notes
-            if (note.isDeleted) {
-              return false;
-            }
-
-            if (_selectedFilter == "all") {
-              return true;
-            }
-            if (_selectedFilter == "pinned") {
-              return note.isPinned;
-            }
-
-            // Folder match
-            return note.folder == _selectedFilter;
-          }).toList()
-          // 3. Sort (Pinned first, then updated date)
-          ..sort((final a, final b) {
-            if (a.isPinned != b.isPinned) {
-              return a.isPinned ? -1 : 1;
-            }
-            return b.updatedAt.compareTo(a.updatedAt);
-          });
-
     return MeshGradientScaffold(
       floatingActionButton: FloatingActionButton(
-        onPressed: () {
-          // Prevent creation if in Trash view
-          if (_selectedFilter == "trash") {
-            return;
-          }
-
-          ref.read(notesProvider.notifier).addNote();
-          final String newId = ref.read(notesProvider).first.id;
-          unawaited(context.pushNamed("editor", pathParameters: {"id": newId}));
-        },
+        onPressed: _handleCreateNote,
         backgroundColor: colorScheme.surface.withValues(alpha: 0.8),
         foregroundColor: colorScheme.primary,
         elevation: 0,
@@ -118,243 +91,316 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
         ),
         child: Icon(LucideIcons.plus, size: 24.sp),
       ),
-      body: CustomScrollView(
-        physics: const BouncingScrollPhysics(),
-        slivers: [
-          // --- Header ---
-          SliverAppBar.large(
-            title: Row(
-              children: [
-                Icon(
-                  LucideIcons.cloud,
-                  size: 24.sp,
-                  color: colorScheme.primary.withValues(alpha: 0.8),
-                ),
-                SizedBox(width: 8.w),
-                Text(
-                  S.of(context).appName,
-                  style: TextStyle(
-                    fontWeight: FontWeight.w800,
-                    letterSpacing: -1.sp,
-                    color: colorScheme.onSurface.withValues(alpha: 0.9),
-                  ),
-                ),
-              ],
-            ),
-            centerTitle: false,
-            floating: true,
-            pinned: false,
-            expandedHeight: 100.h,
-            backgroundColor: Colors.transparent,
-            actions: [
-              IconButton(
-                icon: Icon(LucideIcons.settings, size: 20.sp),
-                onPressed: () {
-                  unawaited(
-                    showModalBottomSheet(
-                      context: context,
-                      backgroundColor: Colors.transparent,
-                      barrierColor: Colors.black.withValues(alpha: 0.2),
-                      isScrollControlled: true,
-                      builder: (final _) => const SettingsModal(),
-                    ),
-                  );
-                },
-              ),
-              SizedBox(width: 8.w),
-            ],
+      body: notesAsync.when(
+        loading: () => const Center(child: CircularProgressIndicator()),
+        error: (final err, final stack) => Center(
+          child: Text(
+            "Error loading notes: $err",
+            style: TextStyle(color: colorScheme.error),
           ),
+        ),
+        data: (final notes) {
+          // 1. Extract Unique Folders
+          final Set<String> folders = notes
+              .where(
+                (final n) =>
+                    !n.isDeleted &&
+                    n.folder != null &&
+                    n.folder!.trim().isNotEmpty,
+              )
+              .map((final n) => n.folder!)
+              .toSet();
+          final List<String> sortedFolders = folders.toList()..sort();
 
-          // --- Search Bar ---
-          SliverToBoxAdapter(
-            child: Padding(
-              padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 4.h),
-              child: ClipRRect(
-                borderRadius: BorderRadius.circular(12.r),
-                child: BackdropFilter(
-                  filter: ImageFilter.blur(sigmaX: 10, sigmaY: 10),
-                  child: DecoratedBox(
-                    decoration: BoxDecoration(
-                      color: isDark
-                          ? const Color(0xFF1E293B).withValues(
-                              alpha: 0.5,
-                            ) // Slate-800/50
-                          : const Color(0xFFF8FAFC).withValues(alpha: 0.5),
-                      // Slate-50/50
-                      borderRadius: BorderRadius.circular(12.r),
-                      border: Border.all(
-                        color: isDark
-                            ? Colors.white.withValues(alpha: 0.05)
-                            : Colors.transparent,
-                      ),
-                    ),
-                    child: TextField(
-                      controller: _searchController,
-                      onChanged: (final val) =>
-                          setState(() => _searchQuery = val),
-                      style: TextStyle(fontSize: 14.sp),
-                      decoration: InputDecoration(
-                        hintText: S.of(context).searchHint,
-                        hintStyle: TextStyle(
-                          color: colorScheme.onSurfaceVariant.withValues(
-                            alpha: 0.5,
-                          ),
-                          fontSize: 14.sp,
-                        ),
-                        prefixIcon: Icon(
-                          LucideIcons.search,
-                          size: 16.sp,
-                          color: colorScheme.onSurfaceVariant.withValues(
-                            alpha: 0.5,
-                          ),
-                        ),
-                        suffixIcon: _searchQuery.isNotEmpty
-                            ? IconButton(
-                                icon: Icon(LucideIcons.x, size: 14.sp),
-                                onPressed: () {
-                                  _searchController.clear();
-                                  setState(() => _searchQuery = "");
-                                },
-                              )
-                            : null,
-                        border: InputBorder.none,
-                        contentPadding: EdgeInsets.symmetric(vertical: 12.h),
-                        isDense: true,
-                      ),
-                    ),
-                  ),
-                ),
-              ),
-            ),
-          ),
+          // 2. Filter Logic
+          final List<Note> filteredNotes =
+              notes.where((final note) {
+                  // A. Search Text Filter
+                  if (_searchQuery.isNotEmpty) {
+                    final String query = _searchQuery.toLowerCase();
+                    final bool matches =
+                        note.title.toLowerCase().contains(query) ||
+                        note.content.toLowerCase().contains(query);
+                    if (!matches) {
+                      return false;
+                    }
+                  }
 
-          // --- Filter Chips (Standard + Folders) ---
-          SliverToBoxAdapter(
-            child: SingleChildScrollView(
-              scrollDirection: Axis.horizontal,
-              padding: EdgeInsets.fromLTRB(16.w, 12.h, 16.w, 12.h),
-              child: Row(
-                children: [
-                  _FilterChip(
-                    label: S.of(context).filterAll,
-                    isSelected: _selectedFilter == "all",
-                    onTap: () => setState(() => _selectedFilter = "all"),
-                  ),
-                  SizedBox(width: 8.w),
-                  _FilterChip(
-                    label: S.of(context).filterPinned,
-                    icon: LucideIcons.pin,
-                    isSelected: _selectedFilter == "pinned",
-                    onTap: () => setState(() => _selectedFilter = "pinned"),
-                  ),
-                  SizedBox(width: 8.w),
-                  _FilterChip(
-                    label: S.of(context).filterTrash,
-                    icon: LucideIcons.trash2,
-                    isSelected: _selectedFilter == "trash",
-                    onTap: () => setState(() => _selectedFilter = "trash"),
-                  ),
+                  // B. Context Filter
+                  if (_selectedFilter == "trash") {
+                    return note.isDeleted;
+                  }
 
-                  // Divider between standard filters and folders
-                  if (sortedFolders.isNotEmpty) ...[
-                    Container(
-                      height: 20.h,
-                      width: 1.w,
-                      margin: EdgeInsets.symmetric(horizontal: 12.w),
-                      color: colorScheme.onSurfaceVariant.withValues(
-                        alpha: 0.2,
-                      ),
-                    ),
-                    // Dynamic Folders
-                    ...sortedFolders.map(
-                      (final folder) => Padding(
-                        padding: EdgeInsets.only(right: 8.w),
-                        child: _FilterChip(
-                          label: folder,
-                          icon: LucideIcons.folder,
-                          isSelected: _selectedFilter == folder,
-                          onTap: () => setState(() => _selectedFilter = folder),
-                        ),
-                      ),
-                    ),
-                  ],
-                ],
-              ),
-            ),
-          ),
+                  // In normal modes, ONLY show active notes
+                  if (note.isDeleted) {
+                    return false;
+                  }
 
-          // --- Notes List ---
-          if (filteredNotes.isEmpty)
-            SliverFillRemaining(
-              hasScrollBody: false,
-              child: Center(
-                child: Column(
-                  mainAxisSize: MainAxisSize.min,
+                  if (_selectedFilter == "all") {
+                    return true;
+                  }
+
+                  if (_selectedFilter == "pinned") {
+                    return note.isPinned;
+                  }
+
+                  // Folder match
+                  return note.folder == _selectedFilter;
+                }).toList()
+                // 3. Sort (Pinned first, then updated date)
+                ..sort((final a, final b) {
+                  if (a.isPinned != b.isPinned) {
+                    return a.isPinned ? -1 : 1;
+                  }
+                  return b.updatedAt.compareTo(a.updatedAt);
+                });
+
+          return CustomScrollView(
+            physics: const BouncingScrollPhysics(),
+            slivers: [
+              // --- Header ---
+              SliverAppBar.large(
+                title: Row(
                   children: [
                     Icon(
-                      LucideIcons.fileText,
-                      size: 48.sp,
-                      color: colorScheme.onSurface.withValues(alpha: 0.2),
+                      LucideIcons.cloud,
+                      size: 24.sp,
+                      color: colorScheme.primary.withValues(alpha: 0.8),
                     ),
-                    SizedBox(height: 16.h),
+                    SizedBox(width: 8.w),
                     Text(
-                      _searchQuery.isNotEmpty
-                          ? S.of(context).noMatches
-                          : S.of(context).noNotes,
-                      style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                        color: colorScheme.onSurfaceVariant.withValues(
-                          alpha: 0.7,
-                        ),
+                      S.of(context).appName,
+                      style: TextStyle(
+                        fontWeight: FontWeight.w800,
+                        letterSpacing: -1.sp,
+                        color: colorScheme.onSurface.withValues(alpha: 0.9),
                       ),
                     ),
                   ],
                 ),
-              ),
-            )
-          else
-            SliverPadding(
-              padding: EdgeInsets.fromLTRB(16.w, 4.h, 16.w, 100.h),
-              sliver: SliverList.builder(
-                itemCount: filteredNotes.length,
-                itemBuilder: (final context, final index) {
-                  final Note note = filteredNotes[index];
-
-                  return Dismissible(
-                    key: Key(note.id),
-                    direction: DismissDirection.endToStart,
-                    confirmDismiss: (final direction) async {
-                      if (_selectedFilter == "trash") {
-                        // TODO: Implement Restore/Hard Delete for Trash view
-                        return false;
-                      }
-                      ref.read(notesProvider.notifier).deleteNote(note.id);
-                      return false; // We let the provider update state to remove it
+                centerTitle: false,
+                floating: true,
+                pinned: false,
+                expandedHeight: 100.h,
+                backgroundColor: Colors.transparent,
+                actions: [
+                  IconButton(
+                    icon: Icon(LucideIcons.settings, size: 20.sp),
+                    onPressed: () {
+                      unawaited(
+                        showModalBottomSheet(
+                          context: context,
+                          backgroundColor: Colors.transparent,
+                          barrierColor: Colors.black.withValues(alpha: 0.2),
+                          isScrollControlled: true,
+                          builder: (final _) => const SettingsModal(),
+                        ),
+                      );
                     },
-                    background: Container(
-                      alignment: Alignment.centerRight,
-                      padding: EdgeInsets.only(right: 20.w),
-                      child: Icon(
-                        LucideIcons.trash2,
-                        color: Colors.red,
-                        size: 20.sp,
+                  ),
+                  SizedBox(width: 8.w),
+                ],
+              ),
+
+              // --- Search Bar ---
+              SliverToBoxAdapter(
+                child: Padding(
+                  padding: EdgeInsets.symmetric(
+                    horizontal: 16.w,
+                    vertical: 4.h,
+                  ),
+                  child: ClipRRect(
+                    borderRadius: BorderRadius.circular(12.r),
+                    child: BackdropFilter(
+                      filter: ImageFilter.blur(sigmaX: 10, sigmaY: 10),
+                      child: DecoratedBox(
+                        decoration: BoxDecoration(
+                          color: isDark
+                              ? const Color(0xFF1E293B).withValues(alpha: 0.5)
+                              : const Color(0xFFF8FAFC).withValues(alpha: 0.5),
+
+                          borderRadius: BorderRadius.circular(12.r),
+                          border: Border.all(
+                            color: isDark
+                                ? Colors.white.withValues(alpha: 0.05)
+                                : Colors.transparent,
+                          ),
+                        ),
+                        child: TextField(
+                          controller: _searchController,
+                          onChanged: (final val) =>
+                              setState(() => _searchQuery = val),
+                          style: TextStyle(fontSize: 14.sp),
+                          decoration: InputDecoration(
+                            hintText: S.of(context).searchHint,
+                            hintStyle: TextStyle(
+                              color: colorScheme.onSurfaceVariant.withValues(
+                                alpha: 0.5,
+                              ),
+                              fontSize: 14.sp,
+                            ),
+                            prefixIcon: Icon(
+                              LucideIcons.search,
+                              size: 16.sp,
+                              color: colorScheme.onSurfaceVariant.withValues(
+                                alpha: 0.5,
+                              ),
+                            ),
+                            suffixIcon: _searchQuery.isNotEmpty
+                                ? IconButton(
+                                    icon: Icon(LucideIcons.x, size: 14.sp),
+                                    onPressed: () {
+                                      _searchController.clear();
+                                      setState(() => _searchQuery = "");
+                                    },
+                                  )
+                                : null,
+                            border: InputBorder.none,
+                            contentPadding: EdgeInsets.symmetric(
+                              vertical: 12.h,
+                            ),
+                            isDense: true,
+                          ),
+                        ),
                       ),
                     ),
-                    child: NoteCard(
-                      note: note,
-                      onTap: () {
-                        unawaited(
-                          context.pushNamed(
-                            "editor",
-                            pathParameters: {"id": note.id},
-                          ),
-                        );
-                      },
-                    ),
-                  );
-                },
+                  ),
+                ),
               ),
-            ),
-        ],
+
+              // --- Filter Chips (Standard + Folders) ---
+              SliverToBoxAdapter(
+                child: SingleChildScrollView(
+                  scrollDirection: Axis.horizontal,
+                  padding: EdgeInsets.fromLTRB(16.w, 12.h, 16.w, 12.h),
+                  child: Row(
+                    children: [
+                      _FilterChip(
+                        label: S.of(context).filterAll,
+                        isSelected: _selectedFilter == "all",
+                        onTap: () => setState(() => _selectedFilter = "all"),
+                      ),
+                      SizedBox(width: 8.w),
+                      _FilterChip(
+                        label: S.of(context).filterPinned,
+                        icon: LucideIcons.pin,
+                        isSelected: _selectedFilter == "pinned",
+                        onTap: () => setState(() => _selectedFilter = "pinned"),
+                      ),
+                      SizedBox(width: 8.w),
+                      _FilterChip(
+                        label: S.of(context).filterTrash,
+                        icon: LucideIcons.trash2,
+                        isSelected: _selectedFilter == "trash",
+                        onTap: () => setState(() => _selectedFilter = "trash"),
+                      ),
+
+                      // Divider between standard filters and folders
+                      if (sortedFolders.isNotEmpty) ...[
+                        Container(
+                          height: 20.h,
+                          width: 1.w,
+                          margin: EdgeInsets.symmetric(horizontal: 12.w),
+                          color: colorScheme.onSurfaceVariant.withValues(
+                            alpha: 0.2,
+                          ),
+                        ),
+                        // Dynamic Folders
+                        ...sortedFolders.map(
+                          (final folder) => Padding(
+                            padding: EdgeInsets.only(right: 8.w),
+                            child: _FilterChip(
+                              label: folder,
+                              icon: LucideIcons.folder,
+                              isSelected: _selectedFilter == folder,
+                              onTap: () =>
+                                  setState(() => _selectedFilter = folder),
+                            ),
+                          ),
+                        ),
+                      ],
+                    ],
+                  ),
+                ),
+              ),
+
+              // --- Notes List ---
+              if (filteredNotes.isEmpty)
+                SliverFillRemaining(
+                  hasScrollBody: false,
+                  child: Center(
+                    child: Column(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Icon(
+                          LucideIcons.fileText,
+                          size: 48.sp,
+                          color: colorScheme.onSurface.withValues(alpha: 0.2),
+                        ),
+                        SizedBox(height: 16.h),
+                        Text(
+                          _searchQuery.isNotEmpty
+                              ? S.of(context).noMatches
+                              : S.of(context).noNotes,
+                          style: Theme.of(context).textTheme.bodyMedium
+                              ?.copyWith(
+                                color: colorScheme.onSurfaceVariant.withValues(
+                                  alpha: 0.7,
+                                ),
+                              ),
+                        ),
+                      ],
+                    ),
+                  ),
+                )
+              else
+                SliverPadding(
+                  padding: EdgeInsets.fromLTRB(16.w, 4.h, 16.w, 100.h),
+                  sliver: SliverList.builder(
+                    itemCount: filteredNotes.length,
+                    itemBuilder: (final context, final index) {
+                      final Note note = filteredNotes[index];
+
+                      return Dismissible(
+                        key: Key(note.id),
+                        direction: DismissDirection.endToStart,
+                        confirmDismiss: (final direction) async {
+                          if (_selectedFilter == "trash") {
+                            // TODO: Implement Restore/Hard Delete for Trash view
+                            return false;
+                          }
+                          await ref
+                              .read(notesProvider.notifier)
+                              .deleteNote(note.id);
+                          return false; // We let the provider update state to remove it
+                        },
+                        background: Container(
+                          alignment: Alignment.centerRight,
+                          padding: EdgeInsets.only(right: 20.w),
+                          child: Icon(
+                            LucideIcons.trash2,
+                            color: Colors.red,
+                            size: 20.sp,
+                          ),
+                        ),
+                        child: NoteCard(
+                          note: note,
+                          onTap: () {
+                            unawaited(
+                              context.pushNamed(
+                                "editor",
+                                pathParameters: {"id": note.id},
+                              ),
+                            );
+                          },
+                        ),
+                      );
+                    },
+                  ),
+                ),
+            ],
+          );
+        },
       ),
     );
   }
@@ -378,7 +424,6 @@ class _FilterChip extends StatelessWidget {
     final ColorScheme colorScheme = Theme.of(context).colorScheme;
     final bool isDark = Theme.of(context).brightness == Brightness.dark;
 
-    // Style matches desktop Sidebar "Filter Tabs" & "Folder Pills"
     return GestureDetector(
       onTap: onTap,
       child: AnimatedContainer(
