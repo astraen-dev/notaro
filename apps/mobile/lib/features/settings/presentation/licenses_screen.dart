@@ -21,7 +21,6 @@ class _LicensesScreenState extends State<LicensesScreen> {
   Widget build(final BuildContext context) {
     final S l10n = S.of(context);
     final ThemeData theme = Theme.of(context);
-    final ColorScheme colorScheme = theme.colorScheme;
     final bool isDark = theme.brightness == Brightness.dark;
 
     // Sort packages alphabetically
@@ -47,62 +46,76 @@ class _LicensesScreenState extends State<LicensesScreen> {
     }
 
     return MeshGradientScaffold(
-      body: CustomScrollView(
-        slivers: [
-          SliverAppBar.large(
-            title: Text(
-              l10n.settingsLicenses,
-              style: TextStyle(
-                fontSize: 24.sp,
-                fontWeight: FontWeight.bold,
-                color: colorScheme.onSurface,
-              ),
-            ),
-            centerTitle: false,
-            leading: IconButton(
-              icon: Icon(LucideIcons.chevronLeft, size: 24.sp),
-              onPressed: context.pop,
+      body: Column(
+        children: [
+          // Custom Fixed Header
+          Padding(
+            padding: EdgeInsets.symmetric(horizontal: 8.w, vertical: 12.h),
+            child: Row(
+              children: [
+                IconButton(
+                  icon: Icon(LucideIcons.chevronLeft, size: 24.sp),
+                  onPressed: context.pop,
+                ),
+                Expanded(
+                  child: Text(
+                    l10n.settingsLicenses,
+                    style: theme.textTheme.headlineSmall?.copyWith(
+                      fontWeight: FontWeight.bold,
+                      fontSize: 20.sp,
+                    ),
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                ),
+              ],
             ),
           ),
-          SliverPadding(
-            padding: EdgeInsets.fromLTRB(16.w, 0, 16.w, 32.h),
-            sliver: SliverList.builder(
-              itemCount: items.length,
-              itemBuilder: (final context, final index) {
-                final dynamic item = items[index];
-                Widget child;
+          // Scrollable List
+          Expanded(
+            child: CustomScrollView(
+              slivers: [
+                SliverPadding(
+                  padding: EdgeInsets.fromLTRB(16.w, 0, 16.w, 32.h),
+                  sliver: SliverList.builder(
+                    itemCount: items.length,
+                    itemBuilder: (final context, final index) {
+                      final dynamic item = items[index];
+                      Widget child;
 
-                if (item is String) {
-                  child = _LicenseGroupHeader(letter: item);
-                } else if (item is oss.Package) {
-                  final bool isLastOfGroup =
-                      (index + 1 == items.length) ||
-                      (items[index + 1] is String);
+                      if (item is String) {
+                        child = _LicenseGroupHeader(letter: item);
+                      } else if (item is oss.Package) {
+                        final bool isLastOfGroup =
+                            (index + 1 == items.length) ||
+                            (items[index + 1] is String);
 
-                  child = Container(
-                    decoration: BoxDecoration(
-                      color: isDark
-                          ? Colors.white.withValues(alpha: 0.05)
-                          : Colors.white.withValues(alpha: 0.5),
-                      borderRadius: BorderRadius.circular(12.r),
-                      border: Border.all(
-                        color: isDark
-                            ? Colors.white.withValues(alpha: 0.05)
-                            : Colors.white.withValues(alpha: 0.2),
-                      ),
-                    ),
-                    margin: EdgeInsets.only(bottom: 8.h),
-                    child: _LicenseListItem(
-                      package: item,
-                      isLastOfGroup: isLastOfGroup,
-                    ),
-                  );
-                } else {
-                  child = const SizedBox.shrink();
-                }
+                        child = Container(
+                          decoration: BoxDecoration(
+                            color: isDark
+                                ? Colors.white.withValues(alpha: 0.05)
+                                : Colors.white.withValues(alpha: 0.5),
+                            borderRadius: BorderRadius.circular(12.r),
+                            border: Border.all(
+                              color: isDark
+                                  ? Colors.white.withValues(alpha: 0.05)
+                                  : Colors.white.withValues(alpha: 0.2),
+                            ),
+                          ),
+                          margin: EdgeInsets.only(bottom: 8.h),
+                          child: _LicenseListItem(
+                            package: item,
+                            isLastOfGroup: isLastOfGroup,
+                          ),
+                        );
+                      } else {
+                        child = const SizedBox.shrink();
+                      }
 
-                return child;
-              },
+                      return child;
+                    },
+                  ),
+                ),
+              ],
             ),
           ),
         ],
