@@ -4239,13 +4239,13 @@ ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
 SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.''',
   );
 
-/// go_router_builder 4.1.2
+/// go_router_builder 4.1.3
 const _go_router_builder = Package(
     name: 'go_router_builder',
     description: 'A builder that supports generated strongly-typed route helpers for package:go_router',
     repository: 'https://github.com/flutter/packages/tree/main/packages/go_router_builder',
     authors: [],
-    version: '4.1.2',
+    version: '4.1.3',
     spdxIdentifiers: ['BSD-3-Clause'],
     isMarkdown: false,
     isSdk: false,
@@ -4278,13 +4278,13 @@ ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
 SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.''',
   );
 
-/// google_fonts 6.3.2
+/// google_fonts 6.3.3
 const _google_fonts = Package(
     name: 'google_fonts',
     description: 'A Flutter package to use fonts from fonts.google.com. Supports HTTP fetching, caching, and asset bundling.',
     repository: 'https://github.com/flutter/packages/tree/main/packages/google_fonts',
     authors: [],
-    version: '6.3.2',
+    version: '6.3.3',
     spdxIdentifiers: ['BSD-3-Clause'],
     isMarkdown: false,
     isSdk: false,
@@ -5339,14 +5339,14 @@ THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
 OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.''',
   );
 
-/// lucide_icons_flutter 3.1.6
+/// lucide_icons_flutter 3.1.7
 const _lucide_icons_flutter = Package(
     name: 'lucide_icons_flutter',
     description: 'A Lucide icon library package for Flutter applications. Fork of Feather Icons, open for anyone to contribute icons.',
     homepage: 'https://lucide.dev',
     repository: 'https://github.com/vqh2602/lucide-flutter-main',
     authors: [],
-    version: '3.1.6',
+    version: '3.1.7',
     spdxIdentifiers: ['MIT'],
     isMarkdown: false,
     isSdk: false,
@@ -8000,13 +8000,13 @@ ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
 SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.''',
   );
 
-/// shared_preferences_android 2.4.17
+/// shared_preferences_android 2.4.18
 const _shared_preferences_android = Package(
     name: 'shared_preferences_android',
     description: 'Android implementation of the shared_preferences plugin',
     repository: 'https://github.com/flutter/packages/tree/main/packages/shared_preferences/shared_preferences_android',
     authors: [],
-    version: '2.4.17',
+    version: '2.4.18',
     spdxIdentifiers: ['BSD-3-Clause'],
     isMarkdown: false,
     isSdk: false,
@@ -10704,13 +10704,13 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.''',
   );
 
-/// yaml_edit 2.2.2
+/// yaml_edit 2.2.3
 const _yaml_edit = Package(
     name: 'yaml_edit',
     description: 'A library for YAML manipulation with comment and whitespace preservation.',
     repository: 'https://github.com/dart-lang/tools/tree/main/pkgs/yaml_edit',
     authors: [],
-    version: '2.2.2',
+    version: '2.2.3',
     spdxIdentifiers: ['BSD-3-Clause'],
     isMarkdown: false,
     isSdk: false,
