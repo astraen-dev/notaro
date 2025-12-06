@@ -29,6 +29,10 @@ class MessageLookup extends MessageLookupByLibrary {
   final messages = _notInlinedMessages(_notInlinedMessages);
   static Map<String, Function> _notInlinedMessages(_) => <String, Function>{
     "appName": MessageLookupByLibrary.simpleMessage("Notaro"),
+    "cancel": MessageLookupByLibrary.simpleMessage("Cancel"),
+    "deletePermanently": MessageLookupByLibrary.simpleMessage(
+      "Delete Permanently",
+    ),
     "editorCharCount": m0,
     "editorStartTyping": MessageLookupByLibrary.simpleMessage(
       "Start typing...",
@@ -36,6 +40,9 @@ class MessageLookup extends MessageLookupByLibrary {
     "filterAll": MessageLookupByLibrary.simpleMessage("All"),
     "filterPinned": MessageLookupByLibrary.simpleMessage("Pinned"),
     "filterTrash": MessageLookupByLibrary.simpleMessage("Trash"),
+    "folderAssignTitle": MessageLookupByLibrary.simpleMessage("Assign Folder"),
+    "folderExisting": MessageLookupByLibrary.simpleMessage("Existing Folders"),
+    "folderNewName": MessageLookupByLibrary.simpleMessage("Folder Name"),
     "fontMono": MessageLookupByLibrary.simpleMessage("Mono"),
     "fontSans": MessageLookupByLibrary.simpleMessage("Sans Serif"),
     "fontSerif": MessageLookupByLibrary.simpleMessage("Serif"),
@@ -46,9 +53,14 @@ class MessageLookup extends MessageLookupByLibrary {
     "licensePackageVersion": m1,
     "noMatches": MessageLookupByLibrary.simpleMessage("No matches found"),
     "noNotes": MessageLookupByLibrary.simpleMessage("No notes here"),
+    "noteInTrashWarning": MessageLookupByLibrary.simpleMessage(
+      "This note is in the trash. Editing is disabled.",
+    ),
     "noteNoContent": MessageLookupByLibrary.simpleMessage("No additional text"),
     "noteUntitled": MessageLookupByLibrary.simpleMessage("Untitled Note"),
     "okButtonLabel": MessageLookupByLibrary.simpleMessage("OK"),
+    "restoreNote": MessageLookupByLibrary.simpleMessage("Restore Note"),
+    "save": MessageLookupByLibrary.simpleMessage("Save"),
     "searchHint": MessageLookupByLibrary.simpleMessage("Search notes..."),
     "settingsAbout": MessageLookupByLibrary.simpleMessage("ABOUT"),
     "settingsAccentColor": MessageLookupByLibrary.simpleMessage("ACCENT COLOR"),

@@ -121,6 +121,10 @@ pub fn delete_note(id: String) -> Result<()> {
     with_db(|db| db.delete_note(&id).map_err(|e| e.into()))
 }
 
+pub fn restore_note(id: String) -> Result<()> {
+    with_db(|db| db.restore_note(&id).map_err(|e| e.into()))
+}
+
 pub fn get_settings() -> Result<UserSettings> {
     with_db(|db| {
         let settings = db.get_settings()?;

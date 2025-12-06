@@ -4,6 +4,14 @@
   "@appName": {
     "description": "The name of the application."
   },
+  "cancel": "Cancel",
+  "@cancel": {
+    "description": "Standard cancel button label."
+  },
+  "deletePermanently": "Delete Permanently",
+  "@deletePermanently": {
+    "description": "Tooltip for hard delete action."
+  },
   "editorCharCount": "{count} chars",
   "@editorCharCount": {
     "description": "Label displayed at the bottom of the editor showing the total character count.",
@@ -28,6 +36,18 @@
   "filterTrash": "Trash",
   "@filterTrash": {
     "description": "Label for the filter chip that shows deleted notes."
+  },
+  "folderAssignTitle": "Assign Folder",
+  "@folderAssignTitle": {
+    "description": "Title for the folder assignment dialog."
+  },
+  "folderExisting": "Existing Folders",
+  "@folderExisting": {
+    "description": "Header for existing folders list in dialog."
+  },
+  "folderNewName": "Folder Name",
+  "@folderNewName": {
+    "description": "Hint text for new folder input."
   },
   "fontMono": "Mono",
   "@fontMono": {
@@ -66,6 +86,10 @@
   "@noNotes": {
     "description": "Message displayed in the center of the screen when the note list is empty."
   },
+  "noteInTrashWarning": "This note is in the trash. Editing is disabled.",
+  "@noteInTrashWarning": {
+    "description": "Banner text shown when viewing a deleted note."
+  },
   "noteNoContent": "No additional text",
   "@noteNoContent": {
     "description": "Placeholder text displayed in the note preview card when the note body is empty."
@@ -77,6 +101,14 @@
   "okButtonLabel": "OK",
   "@okButtonLabel": {
     "description": "Standard confirmation button label."
+  },
+  "restoreNote": "Restore Note",
+  "@restoreNote": {
+    "description": "Tooltip for restore action."
+  },
+  "save": "Save",
+  "@save": {
+    "description": "Standard save button label."
   },
   "searchHint": "Search notes...",
   "@searchHint": {

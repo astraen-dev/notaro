@@ -64,6 +64,26 @@ class S {
     );
   }
 
+  /// `Cancel`
+  String get cancel {
+    return Intl.message(
+      'Cancel',
+      name: 'cancel',
+      desc: 'Standard cancel button label.',
+      args: [],
+    );
+  }
+
+  /// `Delete Permanently`
+  String get deletePermanently {
+    return Intl.message(
+      'Delete Permanently',
+      name: 'deletePermanently',
+      desc: 'Tooltip for hard delete action.',
+      args: [],
+    );
+  }
+
   /// `{count} chars`
   String editorCharCount(int count) {
     return Intl.message(
@@ -111,6 +131,36 @@ class S {
       'Trash',
       name: 'filterTrash',
       desc: 'Label for the filter chip that shows deleted notes.',
+      args: [],
+    );
+  }
+
+  /// `Assign Folder`
+  String get folderAssignTitle {
+    return Intl.message(
+      'Assign Folder',
+      name: 'folderAssignTitle',
+      desc: 'Title for the folder assignment dialog.',
+      args: [],
+    );
+  }
+
+  /// `Existing Folders`
+  String get folderExisting {
+    return Intl.message(
+      'Existing Folders',
+      name: 'folderExisting',
+      desc: 'Header for existing folders list in dialog.',
+      args: [],
+    );
+  }
+
+  /// `Folder Name`
+  String get folderNewName {
+    return Intl.message(
+      'Folder Name',
+      name: 'folderNewName',
+      desc: 'Hint text for new folder input.',
       args: [],
     );
   }
@@ -196,6 +246,16 @@ class S {
     );
   }
 
+  /// `This note is in the trash. Editing is disabled.`
+  String get noteInTrashWarning {
+    return Intl.message(
+      'This note is in the trash. Editing is disabled.',
+      name: 'noteInTrashWarning',
+      desc: 'Banner text shown when viewing a deleted note.',
+      args: [],
+    );
+  }
+
   /// `No additional text`
   String get noteNoContent {
     return Intl.message(
@@ -224,6 +284,26 @@ class S {
       'OK',
       name: 'okButtonLabel',
       desc: 'Standard confirmation button label.',
+      args: [],
+    );
+  }
+
+  /// `Restore Note`
+  String get restoreNote {
+    return Intl.message(
+      'Restore Note',
+      name: 'restoreNote',
+      desc: 'Tooltip for restore action.',
+      args: [],
+    );
+  }
+
+  /// `Save`
+  String get save {
+    return Intl.message(
+      'Save',
+      name: 'save',
+      desc: 'Standard save button label.',
       args: [],
     );
   }

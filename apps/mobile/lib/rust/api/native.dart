@@ -43,6 +43,9 @@ Future<Note> updateNote({
 Future<void> deleteNote({required String id}) =>
     RustLib.instance.api.crateApiNativeDeleteNote(id: id);
 
+Future<void> restoreNote({required String id}) =>
+    RustLib.instance.api.crateApiNativeRestoreNote(id: id);
+
 Future<UserSettings> getSettings() =>
     RustLib.instance.api.crateApiNativeGetSettings();
 

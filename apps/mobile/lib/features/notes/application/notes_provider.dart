@@ -35,8 +35,9 @@ class NotesNotifier extends _$NotesNotifier {
   Future<void> updateNote(
     final String id,
     final String title,
-    final String content,
-  ) async {
+    final String content, {
+    final String? folder,
+  }) async {
     final List<Note> currentList = state.value ?? [];
     final Note oldNote = currentList.firstWhere((final n) => n.id == id);
 
@@ -44,7 +45,7 @@ class NotesNotifier extends _$NotesNotifier {
       id: id,
       title: title,
       content: content,
-      folder: oldNote.folder,
+      folder: folder ?? oldNote.folder,
       isPinned: oldNote.isPinned,
     );
     ref.invalidateSelf();
@@ -66,6 +67,11 @@ class NotesNotifier extends _$NotesNotifier {
 
   Future<void> deleteNote(final String id) async {
     await rust_api.deleteNote(id: id);
+    ref.invalidateSelf();
+  }
+
+  Future<void> restoreNote(final String id) async {
+    await rust_api.restoreNote(id: id);
     ref.invalidateSelf();
   }
 }

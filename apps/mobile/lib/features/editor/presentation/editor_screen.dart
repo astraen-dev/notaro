@@ -26,6 +26,7 @@ class _EditorScreenState extends ConsumerState<EditorScreen> {
 
   // Track if we have populated the controllers with the initial data
   bool _isInitialized = false;
+  String? _currentFolder;
 
   @override
   void initState() {
@@ -42,7 +43,6 @@ class _EditorScreenState extends ConsumerState<EditorScreen> {
   }
 
   void _save() {
-    // Fire and forget (or await if you want to show saving status)
     unawaited(
       ref
           .read(notesProvider.notifier)
@@ -50,7 +50,96 @@ class _EditorScreenState extends ConsumerState<EditorScreen> {
             widget.noteId,
             _titleController.text,
             _contentController.text,
+            folder: _currentFolder,
           ),
+    );
+  }
+
+  Future<void> _showFolderDialog(
+    final BuildContext context,
+    final List<Note> allNotes,
+  ) async {
+    final Set<String> folders = allNotes
+        .where(
+          (final n) =>
+              !n.isDeleted && n.folder != null && n.folder!.trim().isNotEmpty,
+        )
+        .map((final n) => n.folder!)
+        .toSet();
+
+    final TextEditingController folderController = TextEditingController(
+      text: _currentFolder,
+    );
+
+    await showDialog(
+      context: context,
+      builder: (final context) {
+        final bool isDark = Theme.of(context).brightness == Brightness.dark;
+        return AlertDialog(
+          backgroundColor: isDark ? const Color(0xFF1E293B) : Colors.white,
+          title: Text(S.of(context).folderAssignTitle),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              TextField(
+                controller: folderController,
+                decoration: InputDecoration(
+                  hintText: S.of(context).folderNewName,
+                  filled: true,
+                  fillColor: isDark
+                      ? Colors.black.withValues(alpha: 0.2)
+                      : Colors.grey.withValues(alpha: 0.1),
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(12.r),
+                    borderSide: BorderSide.none,
+                  ),
+                ),
+              ),
+              if (folders.isNotEmpty) ...[
+                SizedBox(height: 16.h),
+                Text(
+                  S.of(context).folderExisting,
+                  style: Theme.of(context).textTheme.labelSmall,
+                ),
+                SizedBox(height: 8.h),
+                Wrap(
+                  spacing: 8.w,
+                  runSpacing: 8.h,
+                  children: folders
+                      .map(
+                        (final f) => ActionChip(
+                          label: Text(f),
+                          onPressed: () {
+                            folderController.text = f;
+                          },
+                        ),
+                      )
+                      .toList(),
+                ),
+              ],
+            ],
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(context),
+              child: Text(S.of(context).cancel),
+            ),
+            FilledButton(
+              onPressed: () {
+                setState(() {
+                  _currentFolder = folderController.text.trim().isEmpty
+                      ? null
+                      : folderController.text.trim();
+                });
+                _save();
+                Navigator.pop(context);
+              },
+              child: Text(S.of(context).save),
+            ),
+          ],
+        );
+      },
     );
   }
 
@@ -92,18 +181,50 @@ class _EditorScreenState extends ConsumerState<EditorScreen> {
           return const SizedBox.shrink();
         }
 
-        // Initialize controllers ONCE to prevent cursor jumping or overwriting user input
+        // Initialize controllers ONCE
         if (!_isInitialized) {
           _titleController.text = note.title;
           _contentController.text = note.content;
+          _currentFolder = note.folder;
           _isInitialized = true;
         }
 
-        // Use MeshGradientScaffold for background consistency
         return MeshGradientScaffold(
           body: SafeArea(
             child: Column(
               children: [
+                // 0. Trash Banner
+                if (note.isDeleted)
+                  Container(
+                    width: double.infinity,
+                    color: Theme.of(
+                      context,
+                    ).colorScheme.error.withValues(alpha: 0.1),
+                    padding: EdgeInsets.symmetric(
+                      vertical: 8.h,
+                      horizontal: 16.w,
+                    ),
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Icon(
+                          LucideIcons.trash2,
+                          size: 16.sp,
+                          color: Theme.of(context).colorScheme.error,
+                        ),
+                        SizedBox(width: 8.w),
+                        Text(
+                          S.of(context).noteInTrashWarning,
+                          style: TextStyle(
+                            color: Theme.of(context).colorScheme.error,
+                            fontSize: 12.sp,
+                            fontWeight: FontWeight.w600,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+
                 // 1. Toolbar
                 Padding(
                   padding: EdgeInsets.symmetric(
@@ -122,40 +243,111 @@ class _EditorScreenState extends ConsumerState<EditorScreen> {
                         onPressed: context.pop,
                       ),
                       const Spacer(),
-                      IconButton(
-                        icon: Icon(
-                          note.isPinned ? LucideIcons.pin : LucideIcons.pinOff,
-                          size: 20.sp,
-                          color: note.isPinned
-                              ? Theme.of(context).colorScheme.primary
-                              : null,
-                        ),
-                        style: IconButton.styleFrom(
-                          backgroundColor: Colors.white.withValues(
-                            alpha: isDark ? 0.1 : 0.5,
+                      // Actions based on state
+                      if (!note.isDeleted) ...[
+                        // Pin
+                        IconButton(
+                          icon: Icon(
+                            note.isPinned
+                                ? LucideIcons.pin
+                                : LucideIcons.pinOff,
+                            size: 20.sp,
+                            color: note.isPinned
+                                ? Theme.of(context).colorScheme.primary
+                                : null,
                           ),
-                        ),
-                        onPressed: () =>
-                            ref.read(notesProvider.notifier).togglePin(note.id),
-                      ),
-                      SizedBox(width: 8.w),
-                      IconButton(
-                        icon: Icon(LucideIcons.trash2, size: 20.sp),
-                        style: IconButton.styleFrom(
-                          backgroundColor: Colors.white.withValues(
-                            alpha: isDark ? 0.1 : 0.5,
+                          style: IconButton.styleFrom(
+                            backgroundColor: Colors.white.withValues(
+                              alpha: isDark ? 0.1 : 0.5,
+                            ),
                           ),
-                          foregroundColor: Theme.of(context).colorScheme.error,
+                          onPressed: () => ref
+                              .read(notesProvider.notifier)
+                              .togglePin(note.id),
                         ),
-                        onPressed: () {
-                          unawaited(
-                            ref
-                                .read(notesProvider.notifier)
-                                .deleteNote(note.id),
-                          );
-                          context.pop();
-                        },
-                      ),
+                        SizedBox(width: 8.w),
+                        // Folder
+                        IconButton(
+                          icon: Icon(
+                            _currentFolder != null
+                                ? LucideIcons.folderOpen
+                                : LucideIcons.folder,
+                            size: 20.sp,
+                            color: _currentFolder != null
+                                ? Theme.of(context).colorScheme.primary
+                                : null,
+                          ),
+                          style: IconButton.styleFrom(
+                            backgroundColor: Colors.white.withValues(
+                              alpha: isDark ? 0.1 : 0.5,
+                            ),
+                          ),
+                          onPressed: () => _showFolderDialog(context, notes),
+                        ),
+                        SizedBox(width: 8.w),
+                        // Soft Delete
+                        IconButton(
+                          icon: Icon(LucideIcons.trash2, size: 20.sp),
+                          style: IconButton.styleFrom(
+                            backgroundColor: Colors.white.withValues(
+                              alpha: isDark ? 0.1 : 0.5,
+                            ),
+                            foregroundColor: Theme.of(
+                              context,
+                            ).colorScheme.error,
+                          ),
+                          onPressed: () {
+                            unawaited(
+                              ref
+                                  .read(notesProvider.notifier)
+                                  .deleteNote(note.id),
+                            );
+                            context.pop();
+                          },
+                        ),
+                      ] else ...[
+                        // Restore
+                        IconButton(
+                          tooltip: S.of(context).restoreNote,
+                          icon: Icon(LucideIcons.rotateCcw, size: 20.sp),
+                          style: IconButton.styleFrom(
+                            backgroundColor: Colors.white.withValues(
+                              alpha: isDark ? 0.1 : 0.5,
+                            ),
+                            foregroundColor: Colors.green,
+                          ),
+                          onPressed: () {
+                            unawaited(
+                              ref
+                                  .read(notesProvider.notifier)
+                                  .restoreNote(note.id),
+                            );
+                            // Stay on screen, it will refresh to active state
+                          },
+                        ),
+                        SizedBox(width: 8.w),
+                        // Hard Delete
+                        IconButton(
+                          tooltip: S.of(context).deletePermanently,
+                          icon: Icon(LucideIcons.trash2, size: 20.sp),
+                          style: IconButton.styleFrom(
+                            backgroundColor: Colors.white.withValues(
+                              alpha: isDark ? 0.1 : 0.5,
+                            ),
+                            foregroundColor: Theme.of(
+                              context,
+                            ).colorScheme.error,
+                          ),
+                          onPressed: () {
+                            unawaited(
+                              ref
+                                  .read(notesProvider.notifier)
+                                  .deleteNote(note.id),
+                            );
+                            context.pop();
+                          },
+                        ),
+                      ],
                     ],
                   ),
                 ),
@@ -181,23 +373,66 @@ class _EditorScreenState extends ConsumerState<EditorScreen> {
                             borderRadius: BorderRadius.circular(24.r),
                           ),
                           child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
+                              // Folder Indicator (if set)
+                              if (_currentFolder != null && !note.isDeleted)
+                                Padding(
+                                  padding: EdgeInsets.only(
+                                    left: 24.w,
+                                    top: 24.h,
+                                    right: 24.w,
+                                  ),
+                                  child: Row(
+                                    children: [
+                                      Icon(
+                                        LucideIcons.folder,
+                                        size: 12.sp,
+                                        color: Theme.of(context)
+                                            .colorScheme
+                                            .primary
+                                            .withValues(alpha: 0.7),
+                                      ),
+                                      SizedBox(width: 6.w),
+                                      Text(
+                                        _currentFolder!,
+                                        style: TextStyle(
+                                          fontSize: 12.sp,
+                                          fontWeight: FontWeight.w600,
+                                          color: Theme.of(context)
+                                              .colorScheme
+                                              .primary
+                                              .withValues(alpha: 0.7),
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                ),
+
                               // Title Input
                               Padding(
                                 padding: EdgeInsets.fromLTRB(
                                   24.w,
-                                  32.h,
+                                  _currentFolder != null ? 12.h : 32.h,
                                   24.w,
                                   16.h,
                                 ),
                                 child: TextField(
                                   controller: _titleController,
                                   onChanged: (_) => _save(),
+                                  enabled:
+                                      !note.isDeleted, // Disable if deleted
                                   style: TextStyle(
                                     fontSize: 28.sp,
                                     fontWeight: FontWeight.bold,
                                     letterSpacing: -0.5,
                                     height: 1.2,
+                                    color: note.isDeleted
+                                        ? Theme.of(context)
+                                              .colorScheme
+                                              .onSurface
+                                              .withValues(alpha: 0.5)
+                                        : null,
                                   ),
                                   decoration: InputDecoration(
                                     hintText: S.of(context).noteUntitled,
@@ -220,13 +455,20 @@ class _EditorScreenState extends ConsumerState<EditorScreen> {
                                 child: TextField(
                                   controller: _contentController,
                                   onChanged: (_) => _save(),
+                                  enabled:
+                                      !note.isDeleted, // Disable if deleted
                                   style: TextStyle(
                                     fontSize: 16.sp,
                                     height: 1.6,
-                                    color: Theme.of(context)
-                                        .colorScheme
-                                        .onSurface
-                                        .withValues(alpha: 0.9),
+                                    color: note.isDeleted
+                                        ? Theme.of(context)
+                                              .colorScheme
+                                              .onSurface
+                                              .withValues(alpha: 0.5)
+                                        : Theme.of(context)
+                                              .colorScheme
+                                              .onSurface
+                                              .withValues(alpha: 0.9),
                                   ),
                                   decoration: InputDecoration(
                                     hintText: S.of(context).editorStartTyping,
