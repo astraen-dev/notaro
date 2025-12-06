@@ -20,7 +20,8 @@ typedef String MessageIfAbsent(String messageStr, List<dynamic> args);
 class MessageLookup extends MessageLookupByLibrary {
   String get localeName => 'en';
 
-  static String m0(count) => "${count} chars";
+  static String m0(words, chars, version) =>
+      "${words} words, ${chars} chars • v${version}";
 
   static String m1(version) => "v${version}";
 
@@ -33,10 +34,10 @@ class MessageLookup extends MessageLookupByLibrary {
     "deletePermanently": MessageLookupByLibrary.simpleMessage(
       "Delete Permanently",
     ),
-    "editorCharCount": m0,
     "editorStartTyping": MessageLookupByLibrary.simpleMessage(
       "Start typing...",
     ),
+    "editorStats": m0,
     "filterAll": MessageLookupByLibrary.simpleMessage("All"),
     "filterPinned": MessageLookupByLibrary.simpleMessage("Pinned"),
     "filterTrash": MessageLookupByLibrary.simpleMessage("Trash"),

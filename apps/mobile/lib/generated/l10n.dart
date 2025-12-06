@@ -84,14 +84,13 @@ class S {
     );
   }
 
-  /// `{count} chars`
-  String editorCharCount(int count) {
+  /// `{words} words, {chars} chars • v{version}`
+  String editorStats(int words, int chars, int version) {
     return Intl.message(
-      '$count chars',
-      name: 'editorCharCount',
-      desc:
-          'Label displayed at the bottom of the editor showing the total character count.',
-      args: [count],
+      '$words words, $chars chars • v$version',
+      name: 'editorStats',
+      desc: 'Combined statistics shown at the bottom of the editor.',
+      args: [words, chars, version],
     );
   }
 

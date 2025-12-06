@@ -12,11 +12,17 @@
   "@deletePermanently": {
     "description": "Tooltip for hard delete action."
   },
-  "editorCharCount": "{count} chars",
-  "@editorCharCount": {
-    "description": "Label displayed at the bottom of the editor showing the total character count.",
+  "editorStats": "{words} words, {chars} chars • v{version}",
+  "@editorStats": {
+    "description": "Combined statistics shown at the bottom of the editor.",
     "placeholders": {
-      "count": {
+      "words": {
+        "type": "int"
+      },
+      "chars": {
+        "type": "int"
+      },
+      "version": {
         "type": "int"
       }
     }

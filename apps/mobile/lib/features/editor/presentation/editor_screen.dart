@@ -489,27 +489,48 @@ class _EditorScreenState extends ConsumerState<EditorScreen> {
                                 ),
                               ),
 
-                              // Info Footer
+                              // Info Footer (Words, Chars, Version)
                               Padding(
                                 padding: EdgeInsets.all(16.w),
                                 child: Row(
                                   mainAxisAlignment: MainAxisAlignment.end,
                                   children: [
-                                    Text(
-                                      S
-                                          .of(context)
-                                          .editorCharCount(
-                                            _contentController.text.length,
-                                          ),
-                                      style: TextStyle(
-                                        fontSize: 10.sp,
-                                        color: Theme.of(context)
-                                            .colorScheme
-                                            .onSurface
-                                            .withValues(alpha: 0.4),
-                                        fontWeight: FontWeight.w600,
-                                        letterSpacing: 0.5,
-                                      ),
+                                    ValueListenableBuilder(
+                                      valueListenable: _contentController,
+                                      builder:
+                                          (
+                                            final context,
+                                            final value,
+                                            final child,
+                                          ) {
+                                            final String text = value.text;
+                                            final int wordCount =
+                                                text.trim().isEmpty
+                                                ? 0
+                                                : text
+                                                      .trim()
+                                                      .split(RegExp(r"\s+"))
+                                                      .length;
+
+                                            return Text(
+                                              S
+                                                  .of(context)
+                                                  .editorStats(
+                                                    wordCount,
+                                                    text.length,
+                                                    note.version,
+                                                  ),
+                                              style: TextStyle(
+                                                fontSize: 10.sp,
+                                                color: Theme.of(context)
+                                                    .colorScheme
+                                                    .onSurface
+                                                    .withValues(alpha: 0.4),
+                                                fontWeight: FontWeight.w600,
+                                                letterSpacing: 0.5,
+                                              ),
+                                            );
+                                          },
                                     ),
                                   ],
                                 ),

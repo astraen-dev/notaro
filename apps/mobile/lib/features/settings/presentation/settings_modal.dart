@@ -132,6 +132,19 @@ class SettingsModal extends ConsumerWidget {
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
                     _SectionLabel(label: S.of(context).settingsAccentColor),
+                    const Spacer(),
+                    // Hue Value Text
+                    Text(
+                      "${prefs.accentHue.toInt()}°",
+                      style: TextStyle(
+                        fontFamily: "monospace",
+                        fontSize: 12.sp,
+                        color: Theme.of(
+                          context,
+                        ).colorScheme.onSurfaceVariant.withValues(alpha: 0.7),
+                      ),
+                    ),
+                    SizedBox(width: 8.w),
                     // Live Preview Dot
                     Container(
                       width: 16.w,
